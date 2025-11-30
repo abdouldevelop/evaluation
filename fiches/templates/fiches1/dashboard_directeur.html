@@ -1,0 +1,298 @@
+{% extends 'fiches/base.html' %}
+{% load custom_filters %}
+{% load static %}
+{% load dict_extras %}
+{% block title %}Tableau de Bord - Directeur{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex flex-col sm:flex-row items-center justify-between mb-8">
+        <div class="order-2 sm:order-1 text-center sm:text-left mt-4 sm:mt-0">
+            <h2 class="text-3xl font-bold text-gray-800">Bienvenue, {{ user.username }} </h2>
+            <p class="text-gray-600 mt-1">Vous êtes connecté en tant que <span class="font-semibold">Directeur</span>.</p>
+        </div>
+        <div class="order-1 sm:order-2 flex space-x-4">
+            <a href="{% url 'modifier_mot_de_passe' %}" class="px-4 py-2 bg-green-900 text-white rounded-lg shadow-md hover:bg-green-900 text-white text-sm rounded hover:bg-orange-600 transition-colors duration-150r">
+                <span class="mr-2">🔐</span> Modifier mon mot de passe
+            </a>
+            <a href="{% url 'gerer_signature' %}" class="px-4 py-2 bg-green-900 text-white rounded-lg shadow-md hover:bg-green-900 text-white text-sm rounded hover:bg-orange-600 transition-colors duration-150">
+                <span class="mr-2">✍️</span> Gérer ma signature
+            </a>
+
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+        <div class="bg-gray-200 text-gray-800 py-4 px-6">
+            <h3 class="text-xl font-semibold text-center">📋 Tableau de Bord du Directeur</h3>
+        </div>
+
+        <div class="max-w-7xl mx-auto p-6">
+            <!-- Profil et Signature
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold text-blue-600 mb-4">Signature</h3>
+                <p>
+                    {% if profile.signature %}
+                        Signature enregistrée : <img src="{{ profile.signature.url }}" alt="Signature" class="max-w-[150px]">
+                    {% else %}
+                        Aucune signature enregistrée. <a href="{% url 'modifier_profil_directeur' %}" class="text-blue-600 underline">Ajouter une signature</a>
+                    {% endif %}
+                </p>
+            </div>-->
+            <form method="get" class="mb-6">
+                <label for="sous_direction" class="mr-2 font-medium">Filtrer par sous-direction :</label>
+                <select name="sous_direction" id="sous_direction" class="border rounded p-2">
+                    <option value="">-- Toutes les sous-directions --</option>
+                    {% for sd in sous_directions %}
+                        <option value="{{ sd.id }}" {% if sd.id == selected_sous_direction %}selected{% endif %}>
+                            {{ sd.nom }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="ml-3 bg-green-900 text-white px-4 py-2 rounded hover:bg-green-900 text-white text-sm rounded hover:bg-orange-600 transition-colors duration-150">Filtrer</button>
+            </form>
+
+            <!-- 🔹 Onglets -->
+            <div class="border-b border-gray-200">
+                <nav class="flex -mb-px">
+                    <button class="tab-button w-1/4 py-4 px-1 text-center border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none" data-tab="evaluer-agents">
+                        📝 Évaluer les Agents
+                    </button>
+                    <button class="tab-button w-1/4 py-4 px-1 text-center border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none" data-tab="evaluer-responsables">
+                        📋 Évaluer les Responsables
+                    </button>
+                    <button class="tab-button w-1/4 py-4 px-1 text-center border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none" data-tab="avis-agents">
+                        💬 Avis des Agents
+                    </button>
+                    <button class="tab-button w-1/4 py-4 px-1 text-center border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none" data-tab="evaluations-a-signer">
+                        ✍️ Évaluations à Signer
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Contenu des onglets -->
+            <div class="p-6">
+                <!-- Onglet : Évaluer les Agents -->
+                <div id="evaluer-agents" class="tab-content">
+                    <h3 class="text-xl font-semibold text-green-900 mb-4">Évaluer les Agents</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-200 text-gray-900">
+                                    <th class="py-3 px-4 text-left font-semibold">Matricule</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Nom</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Service</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Semestre </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for agent in agents %}
+                                <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
+                                    <td class="py-3 px-4">{{ agent.matricule }}</td>
+                                    <td class="py-3 px-4">{{ agent.nom }} {{ agent.prenoms }}</td>
+                                    <td class="py-3 px-4">{{ agent.service }}</td>
+                                    <!-- Semestre 1 -->
+                                    <td class="py-3 px-4 text-center">
+                                        {% with ev=evaluations_data|get_item:agent.id|get_item:'s1' %}
+                                            {% if ev %}
+                                                {# Une évaluation existe #}
+                                                {% if ev.est_signe_directeur %}
+                                                    {# Signé par le directeur => bouton grisé #}
+                                                    <button disabled="inline-flex items-center justify-center px-3 py-1 bg-gray-400 text-gray-200 text-sm rounded cursor-not-allowed opacity-60">
+                                                        ✓ Signé
+                                                    </button>
+                                                {% else %}
+                                                    {# Pas encore signé => on peut modifier #}
+                                                        <a href="{% url 'evaluer_agent' agent.id %}?semestre=1" class="inline-flex items-center justify-center px-3 py-1 bg-orange-600 text-white text-sm rounded hover:bg-orange-700">
+                                                            ✏️ Modifier
+                                                        </a>
+                                                {% endif %}
+                                            {% else %}
+                                                    {# Pas d'évaluation => on évalue #}
+                                                        <a href="{% url 'evaluer_agent' agent.id %}?semestre=1"
+                                                            class="inline-flex items-center justify-center px-3 py-1 bg-green-900 text-white text-sm rounded hover:bg-green-800">
+                                                            📝 Évaluer
+                                                        </a>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="py-8 text-center text-gray-500">Aucun agent trouvé.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Onglet : Évaluer les Responsables -->
+                <div id="evaluer-responsables" class="tab-content hidden">
+                    <h3 class="text-xl font-semibold text-green-900 mb-4">Évaluer les Responsables</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-200 text-gray-900">
+                                    <th class="py-3 px-4 text-left font-semibold">Matricule</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Nom</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Poste</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Semestre</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for responsable in responsables %}
+                                <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
+                                    <td class="py-3 px-4">{{ responsable.matricule }}</td>
+                                    <td class="py-3 px-4">{{ responsable.nom }} {{ responsable.prenoms }}</td>
+                                    <td class="py-3 px-4">{{ responsable.poste }}</td>
+
+                            <!-- Semestre 1 -->
+                                    <td class="py-3 px-4 text-center">
+                                        {% with eval_s1=evaluations_data_responsables|get_item:responsable.id|get_item:'s1' %}
+                                            {% if eval_s1 %}
+                                                <a href="{% url 'modifier_evaluation_responsable' eval_s1.evaluation_id %}" class="inline-flex items-center justify-center px-3 py-1 bg-green-900 text-white text-sm rounded hover:bg-orange-600 transition-colors duration-150">
+                                                    Modifier
+                                                </a>
+                                            {% else %}
+                                                <a href="{% url 'evaluer_responsable' responsable.id %}?semestre=1" class="inline-flex items-center justify-center px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-orange-600 transition-colors duration-150">
+                                                    Évaluer
+                                                </a>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="py-8 text-center text-gray-500">Aucun responsable trouvé.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Onglet : Avis des Agents -->
+                <div id="avis-agents" class="tab-content hidden">
+                    <h3 class="text-xl font-semibold text-green-900 mb-4">Avis des Agents</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-200 text-gray-900">
+                                    <th class="py-3 px-4 text-left font-semibold">Matricule</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Agent</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Année</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Semestre</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Avis de l'Agent</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Détails</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for evaluation in evaluations_avec_avis %}
+                                <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
+                                    <td class="py-3 px-4">{{ evaluation.agent.matricule }}</td>
+                                    <td class="py-3 px-4">{{ evaluation.agent.nom }} {{ evaluation.agent.prenoms }}</td>
+                                    <td class="py-3 px-4">{{ evaluation.annee }}</td>
+                                    <td class="py-3 px-4">{{ evaluation.semestre }}</td>
+                                    <td class="py-3 px-4">
+                                        {% if evaluation.avis_agent %}
+                                            {{ evaluation.avis_agent|truncatewords:20 }}
+                                        {% else %}
+                                            <span class="text-gray-500">Aucun avis</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-3 px-4 text-center">
+                                        <a href="{% url 'details_evaluation' evaluation.id %}" class="inline-flex items-center justify-center px-3 py-1 bg-gray-700 text-white text-sm rounded hover:bg-orange-600 transition-colors duration-150">
+                                            📄 Détails
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="py-8 text-center text-gray-500">Aucune évaluation avec avis disponible.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="evaluations-a-signer" class="tab-content hidden">
+                    <h3 class="text-xl font-semibold text-green-900 mb-4">Evaluation à signer</h3>
+                    <div class="overflow-x-auto">
+                        <div>
+                            <table class="w-full border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-200 text-gray-900">
+                                        <th class="py-3 px-4 text-left font-semibold">Agent</th>
+                                        <th class="py-3 px-4 text-left font-semibold">Année</th>
+                                        <th class="py-3 px-4 text-left font-semibold">Semestre</th>
+                                        <th class="py-3 px-4 text-center font-semibold">Action</th>
+                                        </tr>
+                                </thead>
+                                <tbody>
+                                    {% for evaluation in evaluations_a_signer %}
+                                    <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
+                                        <td class="py-3 px-4">{{ evaluation.agent.nom }} {{ evaluation.agent.prenoms }}</td>
+                                        <td class="py-3 px-4">{{ evaluation.annee }}</td>
+                                        <td class="py-3 px-4">{{ evaluation.semestre }}</td>
+                                        <td class="py-3 px-4 text-center">
+                                            {% if evaluation.est_signe_agent %}
+                                                {% if not evaluation.est_signe_directeur %}
+                                                    <a href="{% url 'signer_evaluation_directeur' evaluation.id %}" class="inline-flex items-center justify-center px-3 py-1 bg-yellow-900 text-white text-sm rounded hover:bg-yellow-600 transition-colors duration-150">
+                                                        ✍️ Signer
+                                                    </a>
+                                                {% else %}
+                                                    <span class="text-green-600">✅ Déjà signée</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-red-600">⏳ En attente de signature de l'agent</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="py-8 text-center text-gray-500">Aucune évaluation à signer.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 🔹 Script JavaScript pour les Onglets -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Gestion des onglets
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Retirer les styles actifs des boutons
+            tabButtons.forEach(btn => {
+                btn.classList.remove('border-orange-custom', 'text-orange-custom');
+                btn.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+            });
+
+            // Ajouter les styles actifs au bouton cliqué
+            button.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+            button.classList.add('border-orange-custom', 'text-orange-custom');
+
+            // Masquer tout le contenu des onglets
+            tabContents.forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            // Afficher le contenu de l'onglet cliqué
+            const tabId = button.getAttribute('data-tab');
+            document.getElementById(tabId).classList.remove('hidden');
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,84 @@
+{# fiches/templates/fiches/dashboard_chef_service.html #}
+{% extends 'fiches/base.html' %}
+{% load static %}
+
+{% block title %}Tableau de Bord - Chef de Service{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+  <div class="flex flex-col sm:flex-row items-center justify-between mb-8">
+    <div class="text-center sm:text-left mt-4 sm:mt-0">
+      <h2 class="text-3xl font-bold text-gray-800">Bienvenue, {{ user.get_full_name }}</h2>
+      <p class="text-gray-600 mt-1">Vous êtes connecté en tant que <span class="font-semibold">Chef de Service</span>.</p>
+    </div>
+    <a href="{% url 'modifier_mot_de_passe' %}" class="px-4 py-2 bg-green-900 text-white rounded-lg shadow-md text-sm hover:bg-orange-600 transition-colors duration-150">
+      🔐 Modifier mon mot de passe
+    </a>
+  </div>
+
+  <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+    <div class="bg-gray-200 text-gray-800 py-4 px-6">
+      <h3 class="text-xl font-semibold text-center">📋 Tableau de Bord du Chef de Service</h3>
+    </div>
+
+    <div class="p-6">
+      <form method="get" class="mb-6">
+        <label for="status" class="mr-2 font-medium">Filtrer par statut :</label>
+        <select name="status" id="status" class="border rounded p-2">
+          <option value="">-- Tous les statuts --</option>
+          <option value="pending" {% if status == 'pending' %}selected{% endif %}>En attente</option>
+          <option value="completed" {% if status == 'completed' %}selected{% endif %}>Terminées</option>
+        </select>
+        <button type="submit" class="ml-3 bg-green-900 text-white px-4 py-2 rounded hover:bg-green-900 transition-colors duration-150">Filtrer</button>
+      </form>
+
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse">
+          <thead>
+            <tr class="bg-gray-200 text-gray-900">
+              <th class="py-3 px-4 text-left font-semibold">Matricule</th>
+              <th class="py-3 px-4 text-left font-semibold">Nom</th>
+              <th class="py-3 px-4 text-left font-semibold">Service</th>
+              <th class="py-3 px-4 text-center font-semibold">État</th>
+              <th class="py-3 px-4 text-center font-semibold">Évaluer</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for agent in agents %}
+            <tr class="border-b hover:bg-gray-50">
+              <td class="py-3 px-4">{{ agent.matricule }}</td>
+              <td class="py-3 px-4">{{ agent.nom }} {{ agent.prenoms }}</td>
+              <td class="py-3 px-4">{{ service.nom }}</td>
+              <td class="py-3 px-4 text-center">
+                {% if agent.id in completed_ids %}
+                  <span class="text-green-600 font-medium">Terminée</span>
+                {% else %}
+                  <span class="text-yellow-600 font-medium">En attente</span>
+                {% endif %}
+              </td>
+              <td class="py-3 px-4 text-center">
+                {% if agent.id in completed_ids %}
+                  <button class="px-3 py-1 bg-gray-400 text-white text-sm rounded cursor-not-allowed opacity-70"
+                      disabled title="Déjà évalué">
+                  🖋️ Évaluer
+                  </button>
+                {% else %}
+                  <a href="{% url 'evaluer_agent_chef_service' agent.id %}"
+                    class="px-3 py-1 bg-green-900 text-white text-sm rounded hover:bg-green-800 inline-flex items-center justify-center">
+                    🖋️ Évaluer
+                  </a>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="py-8 text-center text-gray-500">Aucun agent trouvé.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,158 @@
+{% extends 'fiches/base.html' %}
+{% load static %}
+
+{% block title %}Mes Notes - {{ evaluation.agent.nom }} {{ evaluation.agent.prenoms }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .critere-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .critere-row:hover {
+        background-color: #f9fafb;
+    }
+    .critere-label {
+        font-weight: 500;
+        color: #374151;
+    }
+    .critere-note {
+        font-weight: 600;
+        color: #4c6559;
+        padding: 4px 12px;
+        border-radius: 6px;
+        background-color: #f0fdf4;
+    }
+    .moyenne-box {
+        background: linear-gradient(135deg, #4c6559 0%, #3a4f44 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        margin: 20px 0;
+    }
+    .moyenne-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #4c6559;
+        margin: 30px 0 15px 0;
+        padding-bottom: 10px;
+        border-bottom: 3px solid #eea12e;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-5xl mx-auto px-4">
+        <!-- En-tête -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Mes Notes d'Évaluation</h1>
+                    <p class="text-gray-600 mt-2">
+                        <span class="font-semibold">Agent:</span> {{ evaluation.agent.nom }} {{ evaluation.agent.prenoms }}
+                    </p>
+                    <p class="text-gray-600">
+                        <span class="font-semibold">Matricule:</span> {{ evaluation.agent.matricule }} |
+                        <span class="font-semibold">Année:</span> {{ evaluation.annee }} |
+                        <span class="font-semibold">Semestre:</span> {{ evaluation.semestre }}
+                    </p>
+                </div>
+                <a href="javascript:history.back()" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Retour
+                </a>
+            </div>
+        </div>
+
+        <!-- Section Rendement -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <h2 class="section-title">📊 Critères de Rendement</h2>
+            <div class="mt-4">
+                {% for label, note in criteres_rendement %}
+                <div class="critere-row">
+                    <span class="critere-label">{{ label }}</span>
+                    <span class="critere-note">{{ note|floatformat:2 }} / 5</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% if moyenne_rendement %}
+            <div class="moyenne-box mt-6">
+                <div class="text-sm font-medium mb-2">Moyenne Rendement</div>
+                <div class="moyenne-value">{{ moyenne_rendement|floatformat:2 }} / 5</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Section Comportement -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <h2 class="section-title">🤝 Critères de Comportement</h2>
+            <div class="mt-4">
+                {% for label, note in criteres_comportement %}
+                <div class="critere-row">
+                    <span class="critere-label">{{ label }}</span>
+                    <span class="critere-note">{{ note|floatformat:2 }} / 5</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% if moyenne_comportement %}
+            <div class="moyenne-box mt-6">
+                <div class="text-sm font-medium mb-2">Moyenne Comportement</div>
+                <div class="moyenne-value">{{ moyenne_comportement|floatformat:2 }} / 5</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Section Management (si applicable) -->
+        {% if criteres_management %}
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <h2 class="section-title">👔 Critères de Management</h2>
+            <div class="mt-4">
+                {% for label, note in criteres_management %}
+                <div class="critere-row">
+                    <span class="critere-label">{{ label }}</span>
+                    <span class="critere-note">{{ note|floatformat:2 }} / 5</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% if moyenne_management %}
+            <div class="moyenne-box mt-6">
+                <div class="text-sm font-medium mb-2">Moyenne Management</div>
+                <div class="moyenne-value">{{ moyenne_management|floatformat:2 }} / 5</div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Note informative -->
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-lg">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-blue-700">
+                        <strong>Information :</strong> Vous visualisez uniquement les notes que vous avez attribuées lors de votre évaluation.
+                        {% if user_role == 'chef_service' %}
+                        En tant que Chef de Service, vous avez évalué les critères de rendement et de comportement.
+                        {% elif user_role == 'sous_directeur' %}
+                        En tant que Sous-Directeur, vous avez évalué les critères de rendement, de comportement{% if criteres_management %} et de management{% endif %}.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

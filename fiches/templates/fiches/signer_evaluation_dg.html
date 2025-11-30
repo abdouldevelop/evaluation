@@ -1,0 +1,33 @@
+{# fiches/templates/fiches/signer_evaluation_dg.html #}
+{% extends "fiches/base.html" %}
+{% block title %}Signer l’évaluation (DG){% endblock %}
+{% block content %}
+<div class="max-w-xl mx-auto bg-white rounded-lg shadow p-6">
+  <h2 class="text-xl font-semibold mb-4">Signature du Directeur Général</h2>
+
+  <p class="mb-4">
+    Agent : <strong>{{ evaluation.agent.nom }} {{ evaluation.agent.prenoms }}</strong><br>
+    Année : <strong>{{ evaluation.annee }}</strong> — Semestre : <strong>{{ evaluation.get_semestre_display }}</strong><br>
+    Évaluation signée par le Directeur :
+    <strong>{% if evaluation.est_signe_directeur %}Oui{% else %}Non{% endif %}</strong><br>
+    Décision(s) :
+    <strong>
+      {% if evaluation.decision_finale %}
+        {% if evaluation.decision_finale.__class__.__name__ == 'list' %}
+          {{ evaluation.decision_finale|join:", " }}
+        {% else %}
+          {{ evaluation.decision_finale }}
+        {% endif %}
+      {% else %}-{% endif %}
+    </strong>
+  </p>
+
+  <form method="post">
+    {% csrf_token %}
+    <button class="px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800">
+      ✍️ Signer en tant que DG
+    </button>
+    <a href="{% url 'dashboard_dg' %}" class="ml-3 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">Annuler</a>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends 'fiches/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5 max-w-lg mx-auto p-4 sm:p-6 bg-white shadow-lg rounded-lg">
+    <h2 class="text-center text-2xl font-bold mb-6 text-gray-800">🔐 Modifier votre mot de passe</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} flex items-center p-4 mb-4 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}" role="alert">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    {% if message.tags == 'error' %}
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    {% else %}
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    {% endif %}
+                </svg>
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" id="passwordForm" onsubmit="return validateForm()">
+        {% csrf_token %}
+
+        <div class="mb-4">
+            <label for="ancien_mdp" class="form-label block text-sm font-medium text-gray-700">Ancien mot de passe :</label>
+            <div class="relative">
+                <input type="password" class="form-control w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="ancien_mdp" name="ancien_mdp" required aria-describedby="ancien_mdp_help">
+                <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-sm" onclick="togglePassword('ancien_mdp', this)">
+                    <svg class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6.293-3.293a1 1 0 011.414 1.414C19.582 13.247 16.366 16 12 16c-4.366 0-7.582-2.753-10.707-5.879a1 1 0 011.414-1.414C5.418 11.247 8.634 14 12 14c3.366 0 6.582-2.753 9.293-5.293z"/></svg>
+                </button>
+            </div>
+            <small id="ancien_mdp_help" class="text-gray-500 text-xs">Entrez votre mot de passe actuel.</small>
+        </div>
+
+        <div class="mb-4">
+            <label for="nouveau_mdp" class="form-label block text-sm font-medium text-gray-700">Nouveau mot de passe :</label>
+            <div class="relative">
+                <input type="password" class="form-control w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="nouveau_mdp" name="nouveau_mdp" required aria-describedby="nouveau_mdp_help">
+                <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-sm" onclick="togglePassword('nouveau_mdp', this)">
+                    <svg class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6.293-3.293a1 1 0 011.414 1.414C19.582 13.247 16.366 16 12 16c-4.366 0-7.582-2.753-10.707-5.879a1 1 0 011.414-1.414C5.418 11.247 8.634 14 12 14c3.366 0 6.582-2.753 9.293-5.293z"/></svg>
+                </button>
+            </div>
+            <small id="nouveau_mdp_help" class="text-gray-500 text-xs">Doit contenir au moins 8 caractères.</small>
+        </div>
+
+        <div class="mb-4">
+            <label for="confirmation_mdp" class="form-label block text-sm font-medium text-gray-700">Confirmer le nouveau mot de passe :</label>
+            <div class="relative">
+                <input type="password" class="form-control w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="confirmation_mdp" name="confirmation_mdp" required aria-describedby="confirmation_mdp_help">
+                <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-sm" onclick="togglePassword('confirmation_mdp', this)">
+                    <svg class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6.293-3.293a1 1 0 011.414 1.414C19.582 13.247 16.366 16 12 16c-4.366 0-7.582-2.753-10.707-5.879a1 1 0 011.414-1.414C5.418 11.247 8.634 14 12 14c3.366 0 6.582-2.753 9.293-5.293z"/></svg>
+                </button>
+            </div>
+            <small id="confirmation_mdp_help" class="text-gray-500 text-xs">Répétez le nouveau mot de passe.</small>
+            <p id="passwordMismatch" class="text-red-600 text-sm mt-1 hidden">Les mots de passe ne correspondent pas.</p>
+        </div>
+        <div class="flex space-x-4">
+
+            <button type="button" onclick="history.back()" class="w-1/2 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:ring-offset-2 transition duration-200">
+                    Retour
+            </button>
+            <button type="submit" class="w-full px-4 py-2 bg-green-900 text-white rounded-lg shadow-md hover:bg-orange-600 text-sm transition-colors duration-150">Modifier le mot de passe</button>
+        </div>
+    </form>
+</div>
+
+<script>
+function togglePassword(inputId, button) {
+    const input = document.getElementById(inputId);
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+    button.innerHTML = isPassword
+        ? `<svg class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.366 0-7.582-2.753-10.707-5.879a1 1 0 011.414-1.414C5.418 14.247 8.634 17 12 17c1.585 0 3.073-.584 4.293-1.707M9 12a3 3 0 006 0 3 3 0 00-6 0zm12.293-3.293a1 1 0 011.414 1.414C19.582 13.247 16.366 16 12 16c-1.585 0-3.073-.584-4.293-1.707"/></svg>`
+        : `<svg class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6.293-3.293a1 1 0 011.414 1.414C19.582 13.247 16.366 16 12 16c-4.366 0-7.582-2.753-10.707-5.879a1 1 0 011.414-1.414C5.418 11.247 8.634 14 12 14c3.366 0 6.582-2.753 9.293-5.293z"/></svg>`;
+}
+
+function validateForm() {
+    const newPassword = document.getElementById('nouveau_mdp').value;
+    const confirmPassword = document.getElementById('confirmation_mdp').value;
+    const mismatchMessage = document.getElementById('passwordMismatch');
+
+    if (newPassword !== confirmPassword) {
+        mismatchMessage.classList.remove('hidden');
+        return false;
+    }
+    mismatchMessage.classList.add('hidden');
+    return true;
+}
+</script>
+{% endblock %}

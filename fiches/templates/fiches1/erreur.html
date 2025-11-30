@@ -1,0 +1,18 @@
+{% extends 'fiches/base.html' %}
+{% load static %}
+
+{% block title %}Erreur{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="text-center my-12">
+        <h2 class="text-3xl font-bold text-red-600">❌ Une erreur s'est produite</h2>
+        <p class="text-gray-600 mt-4 text-lg">{{ message }}</p>
+        <div class="mt-6">
+            <a href="{% url 'dashboard_rh' %}" class="inline-flex items-center justify-center px-6 py-3 bg-orange-custom text-white rounded-lg shadow-md hover:bg-orange-custom/90 transition-all duration-300">
+                <span class="mr-2">↩️</span> Retour au Tableau de Bord
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

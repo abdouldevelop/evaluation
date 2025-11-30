@@ -1,0 +1,221 @@
+{% extends 'fiches/base.html' %}
+{% load static %}
+
+{% block title %}Évaluation de {{ agent.nom }}- Semestre {{ semestre }}{% endblock %}
+{% block content %}
+{% load dict_extras %}
+{% load custom_filters %}
+
+
+<div class="max-w-7xl mx-auto">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">📄 Fiche d'Évaluation - {{ agent.nom }} {{ agent.prenoms }}</h2>
+
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <form method="post">
+            {% csrf_token %}
+
+            <!-- 🔹 Informations du Personnel -->
+            <div class="bg-green-custom text-white text-center py-4">
+                <h3 class="text-xl font-semibold">Informations du Personnel</h3>
+            </div>
+            <table class="w-full border-collapse mb-6">
+                <tr><td class="px-4 py-2 font-semibold">Nom et Prénoms :</td><td class="px-4 py-2">{{ agent.nom }} {{ agent.prenoms }}</td></tr>
+                <tr><td class="px-4 py-2 font-semibold">Matricule :</td><td class="px-4 py-2">{{ agent.matricule }}</td></tr>
+                <tr><td class="px-4 py-2 font-semibold">Date d'embauche :</td><td class="px-4 py-2">{{ agent.date_embauche }}</td></tr>
+                <tr><td class="px-4 py-2 font-semibold">Catégorie :</td><td class="px-4 py-2">{{ agent.categorie }}</td></tr>
+                <tr><td class="px-4 py-2 font-semibold">Direction :</td><td class="px-4 py-2">{{ agent.direction.nom }}</td></tr>
+                <tr><td class="px-4 py-2 font-semibold">Sous-direction :</td><td class="px-4 py-2">{{ agent.sous_direction|default:"N/A" }}</td></tr>
+                <tr><td class="px-4 py-2 font-semibold">Service :</td><td class="px-4 py-2">{{ agent.service|default:"N/A" }}</td></tr>
+                <tr><td class="px-4 py-2 font-semibold">Type de Personnel :</td><td class="px-4 py-2">🔹 Responsable</td></tr>
+            </table>
+
+            <!-- 🔹 Informations Générales sur l'Évaluation -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-3">📆 Informations de l'Évaluation</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="id_annee" class="block text-sm font-medium text-gray-700">Année :</label>
+                        {{ form.annee }}
+                    </div>
+                    <div>
+                        <label for="id_semestre" class="block text-sm font-medium text-gray-700">Semestre :</label>
+                        {{ form.semestre }}
+                    </div>
+                    <div class="col-span-2">
+                        <label for="id_type_personnel" class="block text-sm font-medium text-gray-700">Type de Personnel :</label>
+                        {{ form.type_personnel }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Afficher les erreurs du formulaire -->
+            {% if form.errors %}
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                    <ul class="errorlist">
+                        {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                        {% for field in form %}
+                            {% if field.errors %}
+                                <li>{{ field.label }}: {{ field.errors|striptags }}</li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <!-- 🔹 Évaluation du Rendement -->
+            <h3 class="text-xl font-semibold text-orange-custom mb-4">📊 A- Évaluation du Rendement</h3>
+            <table class="w-full border-collapse mb-6">
+                <thead>
+                    <tr class="bg-green-custom text-white">
+                        <th class="py-3 px-4 text-left font-semibold">Critères</th>
+                        <th class="py-3 px-4 text-left font-semibold w-40">Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for field in form %}
+                        {% if field.name in criteres_rendement %}
+                            <tr>
+                                <td class="px-4 py-2">{{ field.label }}</td>
+                                <td class="px-4 py-2">
+                                    {{ field }}
+                                    <div id="justif_{{ field.id_for_label }}" class="hidden mt-2">
+                                        <label class="text-sm text-gray-600">Justification (note 1 ou 5) :</label>
+                                        <textarea name="{{ field.name }}_justif" rows="2" class="w-full border rounded">{{ justifications|get_item:field.name }}</textarea>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- 🔹 Évaluation du Comportement -->
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">📊 C- Évaluation du Comportement</h3>
+            <table class="w-full border-collapse mb-6">
+                <thead>
+                    <tr class="bg-green-custom text-white">
+                        <th class="py-3 px-4 text-left font-semibold">Critères</th>
+                        <th class="py-3 px-4 text-left font-semibold w-40">Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for field in form %}
+                        {% if field.name in criteres_comportement %}
+                            <tr>
+                                <td class="px-4 py-2">{{ field.label }}</td>
+                                <td class="px-4 py-2">
+                                    {{ field }}
+                                    <div id="justif_{{ field.id_for_label }}" class="hidden mt-2">
+                                        <label class="text-sm text-gray-600">Justification (note 1 ou 5) :</label>
+                                        <textarea name="{{ field.name }}_justif" rows="2" class="w-full border rounded">{{ justifications|get_item:field.name }}</textarea>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- 🔹 Évaluation du Management (pour responsables) -->
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">📊 D- Évaluation du Management</h3>
+            <table class="w-full border-collapse mb-6">
+                <thead>
+                    <tr class="bg-green-custom text-white">
+                        <th class="py-3 px-4 text-left font-semibold">Critères</th>
+                        <th class="py-3 px-4 text-left font-semibold w-40">Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for field in form %}
+                        {% if field.name in 'leadership,planification,travail_equipe,resolution_problemes,prise_decision' %}
+                            <tr>
+                                <td class="px-4 py-2">{{ field.label }}</td>
+                                <td class="px-4 py-2">
+                                    {{ field }}
+                                    <div id="justif_{{ field.id_for_label }}" class="hidden mt-2">
+                                        <label class="text-sm text-gray-600">Justification (note 1 ou 5) :</label>
+                                        <textarea name="{{ field.name }}_justif" rows="2" class="w-full border rounded">{{ justifications|get_item:field.name }}</textarea>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- 🔹 Avis du Directeur -->
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">✍️ Avis du Directeur</h3>
+            <table class="w-full mb-6">
+                <tr>
+                    <td class="px-4 py-2">{{ form.avis_directeur.label_tag }}</td>
+                    <td class="px-4 py-2">{{ form.avis_directeur }}</td>
+                </tr>
+            </table>
+
+            <!-- 🔹 Boutons de soumission -->
+            <div class="text-center mt-6">
+                <button type="submit" class="bg-green-custom text-white px-6 py-3 rounded-lg hover:bg-green-custom/90 transition-all duration-300">
+                    ✅ Enregistrer l'Évaluation
+                </button>
+                <a href="{% url 'dashboard_directeur' %}" class="ml-4 bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-all duration-300">
+                    ⬅️ Retour
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('avis_directeur').addEventListener('input', function(e) {
+        const forbiddenChars = /[@/#&"#~{[|``:+°)0-9;*ù^()§_?=*$<>\\]/g;
+        this.value = this.value.replace(forbiddenChars, '');
+    });
+</script>
+
+<!-- 🔹 Scripts de style pour les champs Django avec Tailwind -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Appliquer Tailwind CSS aux champs de formulaire
+        const textInputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="date"], input[type="number"], select');
+        textInputs.forEach(input => {
+            input.classList.add('w-full', 'px-3', 'py-2', 'border', 'border-gray-300', 'rounded-md', 'shadow-sm', 'focus:outline-none', 'focus:ring-2', 'focus:ring-orange-custom', 'focus:border-orange-custom');
+        });
+
+        // Style spécifique pour les textareas
+        const textareas = document.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+            textarea.classList.add('w-full', 'px-3', 'py-2', 'border', 'border-gray-300', 'rounded-md', 'shadow-sm', 'focus:outline-none', 'focus:ring-2', 'focus:ring-orange-custom', 'focus:border-orange-custom', 'h-32');
+        });
+    });
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const champs = ['leadership', 'planification', 'travail_equipe', 'resolution_problemes', 'prise_decision'];
+        champs.forEach(function(champ) {
+            const select = document.getElementById("id_" + champ);
+            const justifDiv = document.getElementById("justif_id_" + champ);
+
+            if (select && justifDiv) {
+                select.addEventListener("change", function() {
+                    if (select.value === "1" || select.value === "5") {
+                        justifDiv.classList.remove("hidden");
+                    } else {
+                        justifDiv.classList.add("hidden");
+                        const textarea = justifDiv.querySelector("textarea");
+                        if (textarea) textarea.value = "";
+                    }
+                });
+
+                // Initialisation si une note est déjà présente
+                if (select.value === "1" || select.value === "5") {
+                    justifDiv.classList.remove("hidden");
+                }
+            }
+        });
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,137 @@
+{% if user.is_directeur or user.is_directeur_general %}
+    <a href="{% url 'ajouter_evaluation' %}" class="btn btn-primary">Ajouter une Évaluation</a>
+{% endif %}
+
+{% for eval in evaluations %}
+<tr>
+    <td>{{ eval.agent.nom }} {{ eval.agent.prenoms }}</td>
+    <td>{{ eval.annee }}</td>
+    <td>{{ eval.get_semestre_display }}</td>
+    <td>{{ eval.date_evaluation }}</td>
+    <td>
+        {% with eval.calcul_moyennes as moyennes %}
+            Rendement: {{ moyennes.0 }} / 5<br>
+            Comportement: {{ moyennes.1 }} / 5
+        {% endwith %}
+    </td>
+    <td>
+        {% if user.is_agent and eval.agent == user %}
+            <a href="{% url 'donner_avis' eval.id %}" class="btn btn-info btn-sm">Donner un Avis</a>
+        {% endif %}
+
+        {% if user.is_directeur and eval.agent.direction == user.direction %}
+            <a href="{% url 'modifier_evaluation' eval.id %}" class="btn btn-warning btn-sm">Modifier</a>
+        {% endif %}
+
+        {% if user.is_directeur_general %}
+            <a href="{% url 'donner_decision_finale' eval.id %}" class="btn btn-success btn-sm">Décision Finale</a>
+        {% endif %}
+    </td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="6" class="text-center">Aucune évaluation disponible.</td>
+</tr>
+{% endfor %}
+
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des Évaluations</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <h2>Liste des Évaluations</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Agent</th>
+                    <th>Année</th>
+                    <th>Semestre</th>
+                    <th>Date</th>
+                    <th>Note Moyenne</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for eval in evaluations %}
+                <tr>
+                    <td>
+                        <a href="{% url 'modifier_evaluation' eval.id %}" class="btn btn-warning btn-sm">Modifier</a>
+                        <a href="{% url 'supprimer_evaluation' eval.id %}" class="btn btn-danger btn-sm">Supprimer</a>
+                    </td>
+                    <td>{{ eval.agent.nom }} {{ eval.agent.prenoms }}</td>
+                    <td>{{ eval.annee }}</td>
+                    <td>{{ eval.get_semestre_display }}</td>
+                    <td>{{ eval.date_evaluation }}</td>
+                    <td>
+                        {% with eval.calcul_moyennes as moyennes %}
+                            Rendement: {{ moyennes.0 }} / 5<br>
+                            Comportement: {{ moyennes.1 }} / 5
+                        {% endwith %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">Aucune évaluation disponible.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="{% url 'ajouter_evaluation' %}" class="btn btn-primary">Ajouter une Évaluation</a>
+    </div>
+</body>
+</html>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Agent</th>
+            <th>Année</th>
+            <th>Semestre</th>
+            <th>Date</th>
+            <th>Note Moyenne</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for eval in evaluations %}
+        <tr>
+            <td>{{ eval.agent.nom }} {{ eval.agent.prenoms }}</td>
+            <td>{{ eval.annee }}</td>
+            <td>{{ eval.get_semestre_display }}</td>
+            <td>{{ eval.date_evaluation }}</td>
+            <td>
+                {% with eval.calcul_moyennes as moyennes %}
+                    Rendement: {{ moyennes.0 }} / 5<br>
+                    Comportement: {{ moyennes.1 }} / 5
+                {% endwith %}
+            </td>
+            <td>
+                <!-- Un agent peut seulement donner son avis -->
+                {% if user.is_agent and eval.agent == user %}
+                    <a href="{% url 'donner_avis' eval.id %}" class="btn btn-info btn-sm">Donner un Avis</a>
+                {% endif %}
+
+                <!-- Un Directeur peut modifier les évaluations de sa direction -->
+                {% if user.is_directeur and eval.agent.direction == user.username %}
+                    <a href="{% url 'modifier_evaluation' eval.id %}" class="btn btn-warning btn-sm">Modifier</a>
+                {% endif %}
+
+                <!-- Le Directeur Général peut donner une décision finale -->
+                {% if user.is_directeur_general %}
+                    <a href="{% url 'donner_decision_finale' eval.id %}" class="btn btn-success btn-sm">Décision Finale</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6" class="text-center">Aucune évaluation disponible.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+

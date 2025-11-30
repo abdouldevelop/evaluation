@@ -1,0 +1,84 @@
+/* Importation de la police */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+/* ✅ Couleur principale (Verte/Orange inspirée du logo) */
+:root {
+    --anstat-green: #3D5C47;
+    --anstat-orange: #F7941D;
+    --anstat-yellow: #FFD700;
+    --dark-text: #1A1A1A;
+}
+
+/* ✅ Barre de navigation */
+.navbar {
+    background-color: var(--anstat-green);
+}
+
+/* ✅ Ajustement du logo dans la barre de navigation */
+.navbar-brand img {
+    height: 50px;  /* Ajuste la hauteur */
+    width: auto;   /* Maintient les proportions */
+    margin-right: 50px;
+    object-fit: contain; /* Évite le rognage */
+}
+
+/* ✅ Bouton Déconnexion */
+.btn-danger {
+    background-color: #D9534F;
+    border: none;
+}
+
+.btn-danger:hover {
+    background-color: #C9302C;
+}
+
+/* ✅ Carte d'affichage */
+.card {
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* ✅ Tableau stylisé */
+.table {
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* ✅ En-tête du tableau */
+.table thead {
+    background-color: var(--anstat-orange) !important;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+}
+
+.table th {
+    padding: 12px;
+}
+
+.table tbody tr:hover {
+    background-color: #fdf2e9; /* Un léger fond orange pâle */
+}
+
+/* ✅ Boutons */
+.btn-warning {
+    background-color: var(--anstat-yellow);
+    border: none;
+    color: black;
+    font-weight: bold;
+}
+
+.btn-warning:hover {
+    background-color: #e6c300;
+}
+
+.btn-primary {
+    background-color: var(--anstat-orange);
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #d97c18;
+}
+

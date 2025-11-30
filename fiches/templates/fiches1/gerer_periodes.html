@@ -1,0 +1,168 @@
+{% extends 'fiches/base.html' %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .periode-row {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .badge {
+            background-color: #10b981;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            margin-left: 1rem;
+        }
+        .btn-edit {
+            margin-left: auto;
+            padding: 0.5rem 1rem;
+            background-color: #4b5563;
+            color: white;
+            border-radius: 0.375rem;
+            text-decoration: none;
+        }
+        .btn-edit:hover {
+            background-color: #6b7280;
+        }
+        .error-message {
+            display: none;
+            color: #dc2626;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen py-8">
+  <div class="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+
+    <div class="mb-6 flex items-center gap-3">
+      <button
+        type="button"
+        onclick="history.back()"
+        class="bg-gray-300 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-200"
+      >
+        Retour
+      </button>
+
+      <!-- ➕ Bouton pour aller au formulaire d’ajout -->
+      <a id="btn-new-period"
+         href="#periodeForm"
+         class="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200">
+        ➕ Enregistrer une période
+      </a>
+    </div>
+
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Gestion des périodes d’évaluation</h1>
+
+    {% for p in periodes %}
+      <div class="periode-row">
+        <div>
+          <strong class="text-gray-700">{{ p.annee }} – Sem. {{ p.get_semestre_display }}</strong>
+          <!-- ✅ affichage FR -->
+          <span class="text-gray-500">du {{ p.date_debut|date:"d/m/Y" }} au {{ p.date_fin|date:"d/m/Y" }}</span>
+          {% if p.active %}
+            <span class="badge">Actif</span>
+          {% endif %}
+        </div>
+        <a href="{% url 'modifier_periode' p.id %}" class="btn-edit">✏️ Modifier</a>
+      </div>
+    {% empty %}
+      <p class="text-gray-600">Aucune période définie.</p>
+    {% endfor %}
+
+    <hr class="my-8 border-gray-200"/>
+
+    <h2 id="periodeFormTitle" class="text-xl font-semibold text-gray-800 mb-4">
+      {% if editing %}Modifier la période{% else %}Ajouter une nouvelle période{% endif %}
+    </h2>
+
+    <!-- ⚓ ancre pour le bouton -->
+    <form method="post" id="periodeForm" class="space-y-6">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {% for field in form %}
+          <div>
+            <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+              {{ field.label }}
+            </label>
+            {{ field }}
+            {% if field.errors %}
+              <p class="error-message text-red-600">{{ field.errors.as_text }}</p>
+            {% endif %}
+            {% if field.help_text %}
+              <p class="text-sm text-gray-500 mt-1">{{ field.help_text }}</p>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="flex space-x-4">
+        <button
+          id="periodeSubmitBtn"
+          type="submit"
+          class="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200"
+        >
+          {% if editing %}Mettre à jour{% else %}Enregistrer{% endif %}
+        </button>
+
+        {% if editing %}
+          <a
+            href="{% url 'gerer_periodes' %}"
+            class="bg-gray-300 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-200"
+          >
+            Annuler
+          </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Validation simple (déjà présent)
+    const form = document.getElementById('periodeForm');
+    form.addEventListener('submit', function(e) {
+      const dateDebut = document.querySelector('input[name="date_debut"]');
+      const dateFin = document.querySelector('input[name="date_fin"]');
+      if (dateDebut && dateFin && dateDebut.value && dateFin.value) {
+        if (new Date(dateFin.value) < new Date(dateDebut.value)) {
+          e.preventDefault();
+          alert('La date de fin doit être postérieure à la date de début.');
+        }
+      }
+    });
+
+    // ➕ Mettre le formulaire en mode "nouvelle période" + scroll
+    const newBtn = document.getElementById('btn-new-period');
+    newBtn.addEventListener('click', function (e) {
+      // Nettoyer le formulaire (sauf CSRF)
+      const inputs = form.querySelectorAll('input, select, textarea');
+      inputs.forEach(el => {
+        if (el.name === 'csrfmiddlewaretoken') return;
+        if (el.tagName === 'SELECT') el.selectedIndex = 0;
+        else el.value = '';
+      });
+
+      // Mettre les libellés en mode "ajout"
+      const title = document.getElementById('periodeFormTitle');
+      if (title) title.textContent = 'Ajouter une nouvelle période';
+      const submit = document.getElementById('periodeSubmitBtn');
+      if (submit) submit.textContent = 'Enregistrer';
+
+      // Focus sur le premier champ
+      const first = form.querySelector('input, select, textarea');
+      if (first) first.focus();
+    });
+  </script>
+</body>
+</html>
+{% endblock %}

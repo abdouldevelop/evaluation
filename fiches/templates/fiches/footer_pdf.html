@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <body style="margin:0; padding:0;">
+    <div style="text-align:center; width:100%; margin:0; padding:0;">
+      {% if pied_path %}
+        <!-- Pleine largeur, hauteur auto : la taille normale -->
+        <img src="{{ pied_path }}" alt="Pied de page"
+             style="width:100%; height:auto; max-height:50mm; display:block; margin:0 auto;"/>
+      {% endif %}
+      <p style="font-size:9pt; margin:4px 0 0 0;">
+        Généré par {{ request.user.get_full_name }} le {{ generation_date|date:"d/m/Y H:i" }}
+        — Page [page] sur [toPage]
+      </p>
+    </div>
+  </body>
+</html>

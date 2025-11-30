@@ -1,0 +1,137 @@
+{% extends 'fiches/base.html' %}
+{% load static %}
+
+{% block title %}Décision Finale – {{ evaluation.agent.nom }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-orange-50 via-white to-blue-50 py-8">
+    <div class="max-w-4xl mx-auto px-4">
+        <!-- En-tête -->
+        <div class="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 mb-8 p-6 text-center">
+            <div class="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full mb-4 shadow-lg">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+                Décision Finale pour {{ evaluation.agent.nom }} {{ evaluation.agent.prenoms }}
+            </h3>
+            <p class="text-gray-600 mt-2">Année : {{ evaluation.annee }} | Semestre : {{ evaluation.get_semestre_display }}</p>
+        </div>
+
+        <!-- Formulaire -->
+        <form method="post" action="{% url 'donner_decision_finale' evaluation.id %}" class="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-6 space-y-6">
+            {% csrf_token %}
+            <input type="hidden" name="annee" value="{{ evaluation.annee }}">
+            <input type="hidden" name="semestre" value="{{ evaluation.semestre }}">
+            <input type="hidden" name="type_personnel" value="{{ evaluation.type_personnel }}">
+
+            <!-- Décisions -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-3 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Sélectionnez la/les décision(s)
+                </label>
+                <div class="space-y-3">
+                    {% with sel=evaluation.decision_finale|stringformat:"s" %}
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input type="checkbox" name="decision_finale" value="formation" class="form-checkbox h-5 w-5 text-orange-500 rounded focus:ring-orange-500 transition-all duration-300" {% if evaluation.decision_finale and 'formation' in evaluation.decision_finale %}checked{% endif %}>
+                            <span class="text-gray-700">Formation</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input type="checkbox" name="decision_finale" value="promotion" class="form-checkbox h-5 w-5 text-orange-500 rounded focus:ring-orange-500 transition-all duration-300" {% if evaluation.decision_finale and 'promotion' in evaluation.decision_finale %}checked{% endif %}>
+                            <span class="text-gray-700">Promotion</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input type="checkbox" name="decision_finale" value="augmentation" class="form-checkbox h-5 w-5 text-orange-500 rounded focus:ring-orange-500 transition-all duration-300" {% if evaluation.decision_finale and 'augmentation' in evaluation.decision_finale %}checked{% endif %}>
+                            <span class="text-gray-700">Augmentation de salaire (au mérite)</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input type="checkbox" name="decision_finale" value="rupture" class="form-checkbox h-5 w-5 text-orange-500 rounded focus:ring-orange-500 transition-all duration-300" {% if evaluation.decision_finale and 'rupture' in evaluation.decision_finale %}checked{% endif %}>
+                            <span class="text-gray-700">Rupture de contrat</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input id="chk-autres" type="checkbox" name="decision_finale" value="autres" class="form-checkbox h-5 w-5 text-orange-500 rounded focus:ring-orange-500 transition-all duration-300" {% if evaluation.decision_finale and 'autres' in evaluation.decision_finale %}checked{% endif %}>
+                            <span class="text-gray-700">Autres</span>
+                        </label>
+                    {% endwith %}
+
+                    <!-- Champ Autres -->
+                    <div id="autres-field" class="{% if not evaluation.decision_finale or 'autres' not in evaluation.decision_finale %}hidden{% endif %} mt-4">
+                        <label for="autres" class="block text-sm font-medium text-gray-700 mb-2">Détails (si "Autres")</label>
+                        <textarea name="autres" id="autres" rows="4" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-800 transition-all duration-300" placeholder="Précisez les détails de la décision...">{{ evaluation.autres_decision|default_if_none:"" }}</textarea>
+                    </div>
+
+                    <!-- Erreurs -->
+                    {% if form and form.errors.decision_finale %}
+                        <p class="mt-2 text-red-600 text-sm">{{ form.errors.decision_finale.0 }}</p>
+                    {% endif %}
+                    {% if form and form.errors.autres %}
+                        <p class="mt-2 text-red-600 text-sm">{{ form.errors.autres.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Boutons -->
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8">
+                <a href="{% url 'dashboard_dg' %}" class="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl shadow-md text-sm hover:from-gray-600 hover:to-gray-700 transform hover:scale-105 transition-all duration-300">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                    Retour
+                </a>
+                <button type="submit" class="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl shadow-md text-sm hover:from-orange-600 hover:to-orange-700 transform hover:scale-105 transition-all duration-300">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Enregistrer la/les décision(s)
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const autresCheckbox = document.getElementById('chk-autres');
+        const autresField = document.getElementById('autres-field');
+
+        function toggleAutres() {
+            if (!autresCheckbox || !autresField) return;
+            autresField.classList.toggle('hidden', !autresCheckbox.checked);
+            if (!autresCheckbox.checked) {
+                document.getElementById('autres').value = ''; // Réinitialiser le champ si décoché
+            }
+        }
+
+        if (autresCheckbox) {
+            autresCheckbox.addEventListener('change', toggleAutres);
+            toggleAutres(); // Initialisation
+        }
+    });
+</script>
+
+<style>
+    /* Animation d'apparition */
+    .fade-in {
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Style des checkboxes */
+    .form-checkbox {
+        @apply appearance-none h-5 w-5 border-2 border-gray-300 rounded-md checked:bg-orange-500 checked:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all duration-300;
+    }
+
+    /* Style du textarea */
+    textarea {
+        @apply w-full px-4 py-3 border-2 border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-gray-800 transition-all duration-300;
+    }
+</style>
+{% endblock %}

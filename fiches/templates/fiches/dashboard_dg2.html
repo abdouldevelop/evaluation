@@ -1,0 +1,666 @@
+{% extends 'fiches/base.html' %}
+{% load static %}
+{% load evaluation_filters %}
+{% load dict_extras %}
+
+{% block title %}Tableau de Bord - DG{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+  <!-- En-tête -->
+  <div class="flex flex-col sm:flex-row items-center justify-between mb-8">
+    <div class="order-2 sm:order-1 text-center sm:text-left mt-4 sm:mt-0">
+      <h2 class="text-3xl font-bold text-gray-800">Bienvenue, M. le Directeur Général</h2>
+      <p class="text-gray-600 mt-1">Vous êtes connecté au compte <span class="font-semibold">Directeur Général</span>.</p>
+    </div>
+    <div class="order-1 sm:order-2 flex space-x-4">
+      <a href="{% url 'modifier_mot_de_passe' %}" class="px-4 py-2 bg-green-900 text-white rounded-lg shadow-md text-sm hover:bg-orange-600 transition-colors duration-150">
+        🔐 Modifier mon mot de passe
+      </a>
+      <a href="{% url 'gerer_signature' %}" class="px-4 py-2 bg-green-900 text-white rounded-lg shadow-md text-sm hover:bg-orange-600 transition-colors duration-150">
+        ✍️ Gérer ma signature
+      </a>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="max-w-3xl mx-auto mb-8">
+    <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label for="directionFilter" class="block text-gray-700 font-medium mb-2">Filtrer par Direction :</label>
+        <select id="directionFilter" name="direction" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-custom focus:border-orange-custom">
+          <option value="all" {% if direction_filter == 'all' %}selected{% endif %}>Toutes les Directions</option>
+          {% for direction in directions %}
+            <option value="{{ direction.id }}" {% if direction_filter == direction.id|stringformat:"s" %}selected{% endif %}>{{ direction.nom }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="anneeFilter" class="block text-gray-700 font-medium mb-2">Filtrer par Année :</label>
+        <select id="anneeFilter" name="annee" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-custom focus:border-orange-custom">
+          <option value="" {% if not annee_filter %}selected{% endif %}>Toutes les Années</option>
+          {% for annee in annees %}
+            <option value="{{ annee }}" {% if annee_filter == annee|stringformat:"s" %}selected{% endif %}>{{ annee }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="semestreFilter" class="block text-gray-700 font-medium mb-2">Filtrer par Semestre :</label>
+        <select id="semestreFilter" name="semestre" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-custom focus:border-orange-custom">
+          <option value="" {% if not semestre_filter %}selected{% endif %}>Tous les Semestres</option>
+          {% for semestre_value, semestre_label in semestres %}
+            <option value="{{ semestre_value }}" {% if semestre_filter == semestre_value|stringformat:"s" %}selected{% endif %}>{{ semestre_label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </form>
+  </div>
+
+  <a href="{% url 'dashboard_stats' %}" class="px-6 py-3 bg-gray-600 text-white rounded-lg shadow-md hover:bg-green-900/90 transition-all duration-300 flex items-center justify-center text-lg mb-6">
+    Suivi des évaluations
+  </a>
+
+  <!-- Onglets -->
+  <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+    <!-- Nav -->
+    <div class="border-b border-gray-200">
+      <nav class="flex -mb-px">
+        <button class="tab-button w-1/4 py-4 px-1 text-center border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none" data-tab="evaluer-responsables">
+          ✍️ Évaluer Directeur
+        </button>
+        <button class="tab-button w-1/4 py-4 px-1 text-center border-b-2 font-medium text-sm focus:outline-none" data-tab="evaluations">
+          📊 Liste des Évaluations
+        </button>
+        <button class="tab-button w-1/4 py-4 px-1 text-center border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none" data-tab="evaluations-agent">
+          📊 Liste des Évaluations Agent
+        </button>
+        <button class="tab-button w-1/4 py-4 px-1 text-center border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none" data-tab="evaluations-responsable">
+          📊 Liste des Évaluations Responsable
+        </button>
+        <button class="tab-button w-1/4 py-4 px-1 text-center border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none" data-tab="classement-direction">
+          🏆 Classement par Direction
+        </button>
+        <button class="tab-button w-1/4 py-4 px-1 text-center border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none" data-tab="evaluations-a-signer">
+          ✍️ Évaluations à Signer
+        </button>
+      </nav>
+    </div>
+
+    <!-- Onglet : Évaluer Directeur (liste) -->
+    <div id="evaluer-responsables" class="tab-content hidden p-6">
+      <h3 class="text-xl font-semibold text-green-900 mb-4">Évaluer Directeur</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse">
+          <thead>
+            <tr class="bg-gray-200 text-gray-900">
+              <th class="py-3 px-4 text-left font-semibold">Matricule</th>
+              <th class="py-3 px-4 text-left font-semibold">Nom</th>
+              <th class="py-3 px-4 text-left font-semibold">Poste</th>
+              <th class="py-3 px-4 text-center font-semibold">Semestre </th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for directeur in directeurs %}
+            <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
+              <td class="py-3 px-4">{{ directeur.matricule }}</td>
+              <td class="py-3 px-4">{{ directeur.first_name }} {{ directeur.last_name }}</td>
+              <td class="py-3 px-4">{{ directeur.role }}</td>
+              <!-- S1 -->
+              <td class="py-3 px-4 text-center">
+                {% with resp_map=evaluations_data_responsables|get_item:directeur.id %}
+                  {% with eval_s1=resp_map|get_item:'s1' %}
+                    {% if eval_s1 %}
+                <!-- ✅ Bouton grisé (désactivé) -->
+                      <button disabled class="inline-flex items-center justify-center px-3 py-1 bg-gray-400 text-white text-sm rounded opacity-60 cursor-not-allowed">
+                        ✅ Évaluation faite
+                      </button>
+                    {% else %}
+                      {% with agent_id=directeurs_agents_ids|get_item:directeur.id %}
+                        {% if agent_id %}
+                          <a href="{% url 'evaluer_directeur' agent_id %}?semestre=1" class="inline-flex items-center justify-center px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-orange-600 transition-colors duration-150">
+                            Évaluer
+                          </a>
+                        {% else %}
+                          <span class="text-gray-400 italic">Aucun directeur trouvé.</span>
+                        {% endif %}
+                      {% endwith %}
+                    {% endif %}
+                  {% endwith %}
+                {% endwith %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="py-8 text-center text-gray-500">Aucun directeur trouvé.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Onglet : Liste des Évaluations -->
+    <div id="evaluations" class="tab-content p-6">
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse" id="evaluationsTable">
+          <thead>
+            <tr class="bg-gray-100 border-b border-gray-200">
+              <th class="py-3 px-4 text-left font-semibold">Matricule</th>
+              <th class="py-3 px-4 text-left font-semibold">Agent</th>
+              <th class="py-3 px-4 text-left font-semibold">Direction</th>
+              <th class="py-3 px-4 text-left font-semibold">Type</th>
+              <th class="py-3 px-4 text-left font-semibold">Année</th>
+              <th class="py-3 px-4 text-left font-semibold">Semestre</th>
+              <th class="py-3 px-4 text-center font-semibold">M1 (Rendement)</th>
+              <th class="py-3 px-4 text-center font-semibold">M2 (Comportement)</th>
+              <th class="py-3 px-4 text-center font-semibold">M3 (Management)</th>
+              <th class="py-3 px-4 text-center font-semibold">Moyenne Générale</th>
+              <th class="py-3 px-4 text-center font-semibold">MPA S1 (S2)</th>
+              <th class="py-3 px-4 text-center font-semibold">MPA S2 (S2)</th>
+              <th class="py-3 px-4 text-center font-semibold">Total MPA (S2)</th>
+              <th class="py-3 px-4 text-center font-semibold">Moyenne Générale Annuelle (S2)</th>
+              <th class="py-3 px-4 text-center font-semibold">Décision Finale</th>
+              <th class="py-3 px-4 text-center font-semibold">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for eval in evaluations %}
+            <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150 dir_{{ eval.agent.direction.id }}">
+              <td class="py-3 px-4">{{ eval.agent.matricule }}</td>
+              <td class="py-3 px-4">{{ eval.agent.nom }} {{ eval.agent.prenoms }}</td>
+              <td class="py-3 px-4">{{ eval.agent.direction.nom }}</td>
+              <td class="py-3 px-4">{{ eval.agent.type_personnel|title }}</td>
+              <td class="py-3 px-4">{{ eval.annee }}</td>
+              <td class="py-3 px-4">{{ eval.get_semestre_display }}</td>
+              <td class="py-3 px-4 text-center">
+                <span class="inline-block py-1 px-3 rounded-full {% if eval.moyenne_rendement >= 3 %}bg-green-100 text-green-800{% elif eval.moyenne_rendement >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
+                  {{ eval.moyenne_rendement|floatformat:3 }}
+                </span>
+              </td>
+              <td class="py-3 px-4 text-center">
+                <span class="inline-block py-1 px-3 rounded-full {% if eval.moyenne_comportement >= 3 %}bg-green-100 text-green-800{% elif eval.moyenne_comportement >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
+                  {{ eval.moyenne_comportement|floatformat:3 }}
+                </span>
+              </td>
+              <td class="py-3 px-4 text-center">
+                {% if eval.agent.type_personnel == 'responsable' %}
+                  <span class="inline-block py-1 px-3 rounded-full {% if eval.moyenne_management >= 3 %}bg-green-100 text-green-800{% elif eval.moyenne_management >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
+                    {{ eval.moyenne_management|floatformat:3 }}
+                  </span>
+                {% else %}
+                  <span class="text-gray-500">-</span>
+                {% endif %}
+              </td>
+              <td class="py-3 px-4 text-center">
+                <span class="inline-block py-1 px-3 rounded-full {% with m=eval.moyenne_generale %}{% if m >= 3 %}bg-green-100 text-green-800{% elif m >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}{% endwith %}">
+                  {{ eval.moyenne_generale|floatformat:3 }} / 5
+                </span>
+              </td>
+              <td class="py-3 px-4 text-center">
+                {% if eval.semestre == 2 and eval.stats.mp1 %}
+                  <span class="inline-block py-1 px-3 rounded-full {% with mpa=eval.stats.mp1|div:5 %}{% if mpa >= 3 %}bg-green-100 text-green-800{% elif mpa >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}{% endwith %}">
+                    {{ eval.stats.mp1|floatformat:3 }} / 5
+                  </span>
+                {% else %}<span class="text-gray-500">-</span>{% endif %}
+              </td>
+              <td class="py-3 px-4 text-center">
+                {% if eval.semestre == 2 and eval.stats.mp2 %}
+                  <span class="inline-block py-1 px-3 rounded-full {% with mpa=eval.mpa_s2|div:10 %}{% if mpa >= 3 %}bg-green-100 text-green-800{% elif mpa >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}{% endwith %}">
+                    {{ eval.stats.mp2|floatformat:3 }} / 10
+                  </span>
+                {% else %}<span class="text-gray-500">-</span>{% endif %}
+              </td>
+              <td class="py-3 px-4 text-center">
+                {% if eval.semestre == 2 and eval.total_mpa %}
+                  <span class="inline-block py-1 px-3 rounded-full {% with mpa=eval.total_mpa|div:15 %}{% if mpa >= 3 %}bg-green-100 text-green-800{% elif mpa >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}{% endwith %}">
+                    {{ eval.stats.total_mpa|floatformat:3 }} / 15
+                  </span>
+                {% else %}<span class="text-gray-500">-</span>{% endif %}
+              </td>
+              <td class="py-3 px-4 text-center">
+                {% if eval.semestre == 2 and eval.stats.moyenne_generale_annuelle %}
+                  <span class="inline-block py-1 px-3 rounded-full {% with m=eval.moyenne_generale_annuelle %}{% if m >= 3 %}bg-green-100 text-green-800{% elif m >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}{% endwith %}">
+                    {{ eval.stats.moyenne_generale_annuelle|floatformat:3 }} / 5
+                  </span>
+                {% else %}<span class="text-gray-500">-</span>{% endif %}
+              </td>
+              <td class="py-3 px-4 text-center">
+                {% if eval.decision_finale %}
+                  <span class="inline-block py-1 px-3 rounded-full bg-blue-100 text-blue-800">
+                    {{ eval.get_decision_finale_display }}
+                    {% if eval.decision_finale == 'autres' and eval.autres_decision %} - {{ eval.autres_decision }}{% endif %}
+                  </span>
+                {% else %}
+                  <a href="{% url 'donner_decision_finale' eval.id %}" class="inline-flex items-center justify-center px-3 py-1 bg-orange-custom text-white text-sm rounded hover:bg-orange-custom/90 transition-colors duration-150">
+                    Ajouter Décision
+                  </a>
+                {% endif %}
+              </td>
+              <td class="py-3 px-4 text-center">
+                <a href="{% url 'details_evaluation' eval.id %}" class="inline-flex items-center justify-center px-3 py-1 bg-orange-custom text-white text-sm rounded hover:bg-orange-custom/90 transition-colors duration-150">
+                  📄 Détails
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="16" class="py-8 text-center text-gray-500">Aucune évaluation disponible.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+     <!-- Tab Content -->
+            <div class="p-6">
+                <!-- Évaluations Agents -->
+                <div id="agents" class="tab-content">
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse" id="evaluationsTableAgents">
+                            <thead>
+                                <tr class="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                                    <th class="py-3 px-4 text-left font-semibold">Matricule</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Agent</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Direction</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Année</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Semestre</th>
+                                    <th class="py-3 px-4 text-center font-semibold">M1 (Rendement)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">M2 (Comportement)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Moyenne Générale</th>
+                                    <th class="py-3 px-4 text-center font-semibold">MPA S1 (S2)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">MPA S2 (S2)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Total MPA (S2)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Moy. Annuelle (S2)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Décision Finale</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for eval in evaluations %}
+                                    {% if eval.agent.type_personnel == 'agent' %}
+                                        <tr class="border-b border-gray-200 hover:bg-orange-50 transition-colors duration-150">
+                                            <td class="py-3 px-4">{{ eval.agent.matricule }}</td>
+                                            <td class="py-3 px-4">{{ eval.agent.nom }} {{ eval.agent.prenoms }}</td>
+                                            <td class="py-3 px-4">{{ eval.agent.direction.nom }}</td>
+                                            <td class="py-3 px-4">{{ eval.annee }}</td>
+                                            <td class="py-3 px-4">{{ eval.get_semestre_display }}</td>
+                                            <td class="py-3 px-4 text-center">
+                                                <span class="inline-block py-1 px-3 rounded-full {% if eval.moyenne_rendement >= 3 %}bg-green-100 text-green-800{% elif eval.moyenne_rendement >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                                    {{ eval.moyenne_rendement|floatformat:2 }}
+                                                </span>
+                                            </td>
+                                            <td class="py-3 px-4 text-center">
+                                                <span class="inline-block py-1 px-3 rounded-full {% if eval.moyenne_comportement >= 3 %}bg-green-100 text-green-800{% elif eval.moyenne_comportement >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                                    {{ eval.moyenne_comportement|floatformat:2 }}
+                                                </span>
+                                            </td>
+                                            <td class="py-3 px-4 text-center">
+                                                <span class="inline-block py-1 px-3 rounded-full {% with m=eval.moyenne_generale %}{% if m >= 3 %}bg-green-100 text-green-800{% elif m >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}{% endwith %}">
+                                                    {{ eval.moyenne_generale|floatformat:2 }} / 5
+                                                </span>
+                                            </td>
+                                            <td class="py-3 px-4 text-center">
+                                                {% if eval.semestre == 2 and eval.stats.mp1 %}
+                                                    <span class="inline-block py-1 px-3 rounded-full {% with mpa=eval.stats.mp1|div:5 %}{% if mpa >= 3 %}bg-green-100 text-green-800{% elif mpa >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}{% endwith %}">
+                                                        {{ eval.stats.mp1|floatformat:2 }} / 5
+                                                    </span>
+                                                {% else %}<span class="text-gray-500">-</span>{% endif %}
+                                            </td>
+                                            <td class="py-3 px-4 text-center">
+                                                {% if eval.semestre == 2 and eval.stats.mp2 %}
+                                                    <span class="inline-block py-1 px-3 rounded-full {% with mpa=eval.stats.mp2|div:10 %}{% if mpa >= 3 %}bg-green-100 text-green-800{% elif mpa >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}{% endwith %}">
+                                                        {{ eval.stats.mp2|floatformat:2 }} / 10
+                                                    </span>
+                                                {% else %}<span class="text-gray-500">-</span>{% endif %}
+                                            </td>
+                                            <td class="py-3 px-4 text-center">
+                                                {% if eval.semestre == 2 and eval.stats.total_mpa %}
+                                                    <span class="inline-block py-1 px-3 rounded-full {% with mpa=eval.stats.total_mpa|div:15 %}{% if mpa >= 3 %}bg-green-100 text-green-800{% elif mpa >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}{% endwith %}">
+                                                        {{ eval.stats.total_mpa|floatformat:2 }} / 15
+                                                    </span>
+                                                {% else %}<span class="text-gray-500">-</span>{% endif %}
+                                            </td>
+                                            <td class="py-3 px-4 text-center">
+                                                {% if eval.semestre == 2 and eval.stats.moyenne_generale_annuelle %}
+                                                    <span class="inline-block py-1 px-3 rounded-full {% with m=eval.stats.moyenne_generale_annuelle %}{% if m >= 3 %}bg-green-100 text-green-800{% elif m >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}{% endwith %}">
+                                                        {{ eval.stats.moyenne_generale_annuelle|floatformat:2 }} / 5
+                                                    </span>
+                                                {% else %}<span class="text-gray-500">-</span>{% endif %}
+                                            </td>
+                                            <td class="py-3 px-4 text-center">
+                                                {% if eval.decision_finale %}
+                                                    <span class="inline-block py-1 px-3 rounded-full bg-blue-100 text-blue-800">
+                                                        {{ eval.get_decision_finale_display }}
+                                                        {% if eval.decision_finale == 'autres' and eval.autres_decision %} - {{ eval.autres_decision }}{% endif %}
+                                                    </span>
+                                                {% else %}
+                                                    <a href="{% url 'donner_decision_finale' eval.id %}" class="inline-flex items-center justify-center px-3 py-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-300 shadow-sm">
+                                                        Ajouter Décision
+                                                    </a>
+                                                {% endif %}
+                                            </td>
+                                            <td class="py-3 px-4 text-center">
+                                                <a href="{% url 'details_evaluation' eval.id %}" class="inline-flex items-center justify-center px-3 py-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-sm">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                                    </svg>
+                                                    Détails
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="14" class="py-8 text-center text-gray-500">Aucune évaluation disponible pour les agents.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Évaluations Responsables -->
+                <div id="responsables" class="tab-content hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse" id="evaluationsTableResponsables">
+                            <thead>
+                                <tr class="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                                    <th class="py-3 px-4 text-left font-semibold">Matricule</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Responsable</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Direction</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Année</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Semestre</th>
+                                    <th class="py-3 px-4 text-center font-semibold">M1 (Rendement)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">M2 (Comportement)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">M3 (Management)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Moyenne Générale</th>
+                                    <th class="py-3 px-4 text-center font-semibold">MPA S1 (S2)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">MPA S2 (S2)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Total MPA (S2)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Moy. Annuelle (S2)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Décision Finale</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for eval in evaluations %}
+                                    {% if eval.agent.type_personnel == 'responsable' %}
+                                        <tr class="border-b border-gray-200 hover:bg-orange-50 transition-colors duration-150">
+                                            <td class="py-3 px-4">{{ eval.agent.matricule }}</td>
+                                            <td class="py-3 px-4">{{ eval.agent.nom }} {{ eval.agent.prenoms }}</td>
+                                            <td class="py-3 px-4">{{ eval.agent.direction.nom }}</td>
+                                            <td class="py-3 px-4">{{ eval.annee }}</td>
+                                            <td class="py-3 px-4">{{ eval.get_semestre_display }}</td>
+                                            <td class="py-3 px-4 text-center">
+                                                <span class="inline-block py-1 px-3 rounded-full {% if eval.moyenne_rendement >= 3 %}bg-green-100 text-green-800{% elif eval.moyenne_rendement >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                                    {{ eval.moyenne_rendement|floatformat:2 }}
+                                                </span>
+                                            </td>
+                                            <td class="py-3 px-4 text-center">
+                                                <span class="inline-block py-1 px-3 rounded-full {% if eval.moyenne_comportement >= 3 %}bg-green-100 text-green-800{% elif eval.moyenne_comportement >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                                    {{ eval.moyenne_comportement|floatformat:2 }}
+                                                </span>
+                                            </td>
+                                            <td class="py-3 px-4 text-center">
+                                                <span class="inline-block py-1 px-3 rounded-full {% if eval.moyenne_management >= 3 %}bg-green-100 text-green-800{% elif eval.moyenne_management >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                                    {{ eval.moyenne_management|floatformat:2 }}
+                                                </span>
+                                            </td>
+                                            <td class="py-3 px-4 text-center">
+                                                <span class="inline-block py-1 px-3 rounded-full {% with m=eval.moyenne_generale %}{% if m >= 3 %}bg-green-100 text-green-800{% elif m >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}{% endwith %}">
+                                                    {{ eval.moyenne_generale|floatformat:2 }} / 5
+                                                </span>
+                                            </td>
+                                            <td class="py-3 px-4 text-center">
+                                                {% if eval.semestre == 2 and eval.stats.mp1 %}
+                                                    <span class="inline-block py-1 px-3 rounded-full {% with mpa=eval.stats.mp1|div:5 %}{% if mpa >= 3 %}bg-green-100 text-green-800{% elif mpa >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}{% endwith %}">
+                                                        {{ eval.stats.mp1|floatformat:2 }} / 5
+                                                    </span>
+                                                {% else %}<span class="text-gray-500">-</span>{% endif %}
+                                            </td>
+                                            <td class="py-3 px-4 text-center">
+                                                {% if eval.semestre == 2 and eval.stats.mp2 %}
+                                                    <span class="inline-block py-1 px-3 rounded-full {% with mpa=eval.stats.mp2|div:10 %}{% if mpa >= 3 %}bg-green-100 text-green-800{% elif mpa >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}{% endwith %}">
+                                                        {{ eval.stats.mp2|floatformat:2 }} / 10
+                                                    </span>
+                                                {% else %}<span class="text-gray-500">-</span>{% endif %}
+                                            </td>
+                                            <td class="py-3 px-4 text-center">
+                                                {% if eval.semestre == 2 and eval.stats.total_mpa %}
+                                                    <span class="inline-block py-1 px-3 rounded-full {% with mpa=eval.stats.total_mpa|div:15 %}{% if mpa >= 3 %}bg-green-100 text-green-800{% elif mpa >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}{% endwith %}">
+                                                        {{ eval.stats.total_mpa|floatformat:2 }} / 15
+                                                    </span>
+                                                {% else %}<span class="text-gray-500">-</span>{% endif %}
+                                            </td>
+                                            <td class="py-3 px-4 text-center">
+                                                {% if eval.semestre == 2 and eval.stats.moyenne_generale_annuelle %}
+                                                    <span class="inline-block py-1 px-3 rounded-full {% with m=eval.stats.moyenne_generale_annuelle %}{% if m >= 3 %}bg-green-100 text-green-800{% elif m >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}{% endwith %}">
+                                                        {{ eval.stats.moyenne_generale_annuelle|floatformat:2 }} / 5
+                                                    </span>
+                                                {% else %}<span class="text-gray-500">-</span>{% endif %}
+                                            </td>
+                                            <td class="py-3 px-4 text-center">
+                                                {% if eval.decision_finale %}
+                                                    <span class="inline-block py-1 px-3 rounded-full bg-blue-100 text-blue-800">
+                                                        {{ eval.get_decision_finale_display }}
+                                                        {% if eval.decision_finale == 'autres' and eval.autres_decision %} - {{ eval.autres_decision }}{% endif %}
+                                                    </span>
+                                                {% else %}
+                                                    <a href="{% url 'donner_decision_finale' eval.id %}" class="inline-flex items-center justify-center px-3 py-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-300 shadow-sm">
+                                                        Ajouter Décision
+                                                    </a>
+                                                {% endif %}
+                                            </td>
+                                            <td class="py-3 px-4 text-center">
+                                                <a href="{% url 'details_evaluation' eval.id %}" class="inline-flex items-center justify-center px-3 py-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-sm">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                                    </svg>
+                                                    Détails
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="15" class="py-8 text-center text-gray-500">Aucune évaluation disponible pour les responsables.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+    <!-- Onglet : Classement par Direction -->
+    <div id="classement-direction" class="tab-content hidden p-6">
+      {% for direction, classements in classements_par_direction %}
+      <div class="mb-8">
+        <div class="bg-green-900 text-white py-4 px-6 rounded-t-lg">
+          <h4 class="text-xl font-semibold">{{ direction.nom }}</h4>
+        </div>
+
+        <!-- S1 -->
+        <div class="mb-6">
+          <h5 class="text-lg font-semibold text-gray-800 py-2">Semestre 1</h5>
+          <div class="overflow-x-auto">
+            <table class="w-full border-collapse">
+              <thead>
+                <tr class="bg-gray-100 border-b border-gray-200">
+                  <th class="py-3 px-4 text-left font-semibold">Rang</th>
+                  <th class="py-3 px-4 text-left font-semibold">Matricule</th>
+                  <th class="py-3 px-4 text-left font-semibold">Agent</th>
+                  <th class="py-3 px-4 text-left font-semibold">Type</th>
+                  <th class="py-3 px-4 text-center font-semibold">Moyenne Générale</th>
+                  <th class="py-3 px-4 text-center font-semibold">Détails</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for eval in classements.s1 %}
+                <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
+                  <td class="py-3 px-4">{% if forloop.counter <= 3 %}<span class="inline-block py-1 px-3 rounded-full bg-green-100 text-green-800 font-semibold">{{ forloop.counter }}</span>{% else %}{{ forloop.counter }}{% endif %}</td>
+                  <td class="py-3 px-4">{{ eval.agent.matricule }}</td>
+                  <td class="py-3 px-4">{{ eval.agent.nom }} {{ eval.agent.prenoms }}</td>
+                  <td class="py-3 px-4">{{ eval.agent.type_personnel|title }}</td>
+                  <td class="py-3 px-4 text-center">
+                    <span class="inline-block py-1 px-3 rounded-full {% with m=eval.moyenne_generale %}{% if m >= 3 %}bg-green-100 text-green-800{% elif m >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}{% endwith %}">
+                      {{ eval.moyenne_generale|floatformat:3 }} / 5
+                    </span>
+                  </td>
+                  <td class="py-3 px-4 text-center">
+                    <a href="{% url 'details_evaluation' eval.id %}" class="inline-flex items-center justify-center px-3 py-1 bg-orange-custom text-white text-sm rounded hover:bg-orange-custom/90 transition-colors duration-150">📄 Détails</a>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="py-8 text-center text-gray-500">Aucune évaluation disponible pour S1.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- S2 -->
+        <div class="mb-6">
+          <h5 class="text-lg font-semibold text-gray-800 py-2">Semestre 2 (Annuel)</h5>
+          <div class="overflow-x-auto">
+            <table class="w-full border-collapse">
+              <thead>
+                <tr class="bg-gray-100 border-b border-gray-200">
+                  <th class="py-3 px-4 text-left font-semibold">Rang</th>
+                  <th class="py-3 px-4 text-left font-semibold">Matricule</th>
+                  <th class="py-3 px-4 text-left font-semibold">Agent</th>
+                  <th class="py-3 px-4 text-left font-semibold">Type</th>
+                  <th class="py-3 px-4 text-center font-semibold">Moyenne Générale (S2)</th>
+                  <th class="py-3 px-4 text-center font-semibold">Moyenne Générale Annuelle</th>
+                  <th class="py-3 px-4 text-center font-semibold">Détails</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for eval in classements.s2 %}
+                <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
+                  <td class="py-3 px-4">{% if forloop.counter <= 3 %}<span class="inline-block py-1 px-3 rounded-full bg-green-100 text-green-800 font-semibold">{{ forloop.counter }}</span>{% else %}{{ forloop.counter }}{% endif %}</td>
+                  <td class="py-3 px-4">{{ eval.agent.matricule }}</td>
+                  <td class="py-3 px-4">{{ eval.agent.nom }} {{ eval.agent.prenoms }}</td>
+                  <td class="py-3 px-4">{{ eval.agent.type_personnel|title }}</td>
+                  <td class="py-3 px-4 text-center">
+                    <span class="inline-block py-1 px-3 rounded-full {% with m=eval.moyenne_generale %}{% if m >= 3 %}bg-green-100 text-green-800{% elif m >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}{% endwith %}">{{ eval.moyenne_generale|floatformat:3 }} / 5</span>
+                  </td>
+                  <td class="py-3 px-4 text-center">
+                    {% if eval.moyenne_generale_annuelle %}
+                      <span class="inline-block py-1 px-3 rounded-full {% with m=eval.moyenne_generale_annuelle %}{% if m >= 3 %}bg-green-100 text-green-800{% elif m >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}{% endwith %}">{{ eval.moyenne_generale_annuelle|floatformat:3 }} / 5</span>
+                    {% else %}<span class="text-gray-500">-</span>{% endif %}
+                  </td>
+                  <td class="py-3 px-4 text-center">
+                    <a href="{% url 'details_evaluation' eval.id %}" class="inline-flex items-center justify-center px-3 py-1 bg-orange-custom text-white text-sm rounded hover:bg-orange-custom/90 transition-colors duration-150">📄 Détails</a>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="py-8 text-center text-gray-500">Aucune évaluation disponible pour S2.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="text-center text-gray-500">Aucune direction disponible.</div>
+      {% endfor %}
+    </div>
+
+    <div id="evaluations-a-signer" class="tab-content hidden">
+      <h3 class="text-xl font-semibold text-green-900 mb-4">Evaluation à signer</h3>
+      <div class="overflow-x-auto">
+        <div>
+          <table class="w-full border-collapse">
+            <thead>
+            <tr class="bg-gray-200 text-gray-900">
+              <th class="py-3 px-4 text-left font-semibold">Agent</th>
+              <th class="py-3 px-4 text-left font-semibold">Année</th>
+              <th class="py-3 px-4 text-left font-semibold">Semestre</th>
+              <th class="py-3 px-4 text-center font-semibold">Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for evaluation in evaluations_a_signer %}
+            <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
+              <td class="py-3 px-4">{{ evaluation.agent.nom }} {{ evaluation.agent.prenoms }}</td>
+              <td class="py-3 px-4">{{ evaluation.annee }}</td>
+              <td class="py-3 px-4">{{ evaluation.semestre }}</td>
+              <td class="py-3 px-4 text-center">
+                {% if evaluation.signed_by_evaluator and evaluation.decision_finale and not evaluation.est_signe_dg %}
+                  <form method="post" action="{% url 'signer_evaluation_dg' evaluation.id %}" class="inline">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="inline-flex items-center justify-center px-3 py-1 bg-yellow-900 text-white text-sm rounded hover:bg-yellow-600 transition-colors duration-150">
+                      ✍️ Signer (DG)
+                    </button>
+                  </form>
+                {% elif evaluation.est_signe_dg %}
+                  <span class="text-green-600">✅ Déjà signée DG</span>
+                {% else %}
+                  <span class="text-red-600">⏳ En attente (dir/signature/décision)</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4" class="py-8 text-center text-gray-500">Aucune évaluation à signer.</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // Onglets
+  const tabButtons = document.querySelectorAll('.tab-button');
+  const tabContents = document.querySelectorAll('.tab-content');
+
+  tabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      tabButtons.forEach(btn => {
+        btn.classList.remove('border-orange-custom','text-orange-custom');
+        btn.classList.add('border-transparent','text-gray-500','hover:text-gray-700','hover:border-gray-300');
+      });
+      button.classList.remove('border-transparent','text-gray-500','hover:text-gray-700','hover:border-gray-300');
+      button.classList.add('border-orange-custom','text-orange-custom');
+      tabContents.forEach(c => c.classList.add('hidden'));
+      document.getElementById(button.dataset.tab).classList.remove('hidden');
+    });
+  });
+
+  // Filtrage auto
+  ['directionFilter','anneeFilter','semestreFilter'].forEach(id => {
+    const f = document.getElementById(id);
+    if (f) f.addEventListener('change', () => f.form.submit());
+  });
+
+  // Collapse boutons (si utilisés ailleurs)
+  document.querySelectorAll('button[data-toggle="collapse"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sel = btn.getAttribute('data-target');
+      const panel = document.querySelector(sel);
+      if (panel) panel.classList.toggle('hidden');
+    });
+  });
+
+  // Champ "Autres" décision (si formulaires présents)
+  document.querySelectorAll('select[name="decision"]').forEach(sel => {
+    sel.addEventListener('change', () => {
+      const id = sel.id.split('-')[1];
+      const zone = document.getElementById(`autres-field-${id}`);
+      if (zone) zone.classList.toggle('hidden', sel.value !== 'autres');
+    });
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,414 @@
+{% extends 'fiches/base.html' %}
+
+{% block extra_css %}
+<style>
+    /* ========================================
+       🎨 VARIABLES CSS - CHARTE GRAPHIQUE
+       ======================================== */
+    :root {
+        --primary: #4c6559;
+        --primary-dark: #3a4f44;
+        --primary-light: #7a9882;
+        --secondary: #eea12e;
+        --secondary-dark: #d89125;
+        --secondary-light: #f5b858;
+    }
+
+    /* ========================================
+       ✨ ANIMATIONS KEYFRAMES
+       ======================================== */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.8;
+        }
+    }
+
+    /* ========================================
+       🎯 CONTENEUR PRINCIPAL
+       ======================================== */
+    .form-container {
+        animation: fadeInUp 0.6s ease-out;
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        box-shadow: 0 10px 40px rgba(76, 101, 89, 0.12);
+        transition: all 0.3s ease;
+    }
+
+    .form-container:hover {
+        box-shadow: 0 15px 50px rgba(76, 101, 89, 0.18);
+    }
+
+    /* ========================================
+       🔘 BOUTON RETOUR
+       ======================================== */
+    .btn-retour {
+        background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+        color: #374151;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        animation: slideInLeft 0.6s ease-out;
+    }
+
+    .btn-retour::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-retour:hover::before {
+        left: 100%;
+    }
+
+    .btn-retour:hover {
+        background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-retour:active {
+        transform: translateY(0);
+    }
+
+    /* ========================================
+       📋 TITRE PRINCIPAL
+       ======================================== */
+    .titre-form {
+        color: var(--primary-dark);
+        position: relative;
+        padding-bottom: 1rem;
+        animation: fadeInUp 0.6s ease-out 0.1s both;
+    }
+
+    .titre-form::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(90deg, var(--secondary) 0%, var(--secondary-light) 100%);
+        border-radius: 2px;
+        animation: scaleIn 0.6s ease-out 0.3s both;
+    }
+
+    /* ========================================
+       📝 CHAMPS DE FORMULAIRE
+       ======================================== */
+    .form-field {
+        animation: fadeInUp 0.5s ease-out both;
+    }
+
+    /* Animation stagger pour chaque champ */
+    .form-field:nth-child(1) { animation-delay: 0.1s; }
+    .form-field:nth-child(2) { animation-delay: 0.15s; }
+    .form-field:nth-child(3) { animation-delay: 0.2s; }
+    .form-field:nth-child(4) { animation-delay: 0.25s; }
+    .form-field:nth-child(5) { animation-delay: 0.3s; }
+    .form-field:nth-child(6) { animation-delay: 0.35s; }
+
+    .form-field label {
+        color: var(--primary-dark);
+        font-weight: 500;
+        transition: color 0.3s ease;
+    }
+
+    .form-field:hover label {
+        color: var(--primary);
+    }
+
+    /* Styles pour les inputs */
+    .form-field input,
+    .form-field select,
+    .form-field textarea {
+        width: 100%;
+        padding: 0.625rem 0.875rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .form-field input:focus,
+    .form-field select:focus,
+    .form-field textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(76, 101, 89, 0.1);
+        transform: translateY(-1px);
+    }
+
+    .form-field input:hover,
+    .form-field select:hover,
+    .form-field textarea:hover {
+        border-color: var(--primary-light);
+    }
+
+    /* Messages d'erreur */
+    .error-message {
+        color: #dc2626;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        animation: slideInLeft 0.3s ease-out;
+    }
+
+    /* Texte d'aide */
+    .help-text {
+        color: #6b7280;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        transition: color 0.3s ease;
+    }
+
+    .form-field:hover .help-text {
+        color: #4b5563;
+    }
+
+    /* ========================================
+       🔘 BOUTON SUBMIT
+       ======================================== */
+    .btn-submit {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-submit::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-submit:hover::before {
+        left: 100%;
+    }
+
+    .btn-submit:hover {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, #2a3a31 100%);
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 8px 20px rgba(76, 101, 89, 0.3);
+    }
+
+    .btn-submit:active {
+        transform: translateY(0) scale(1);
+    }
+
+    .btn-submit:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(76, 101, 89, 0.3);
+    }
+
+    /* ========================================
+       🔘 BOUTON ANNULER
+       ======================================== */
+    .btn-annuler {
+        background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+        color: #374151;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-annuler::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-annuler:hover::before {
+        left: 100%;
+    }
+
+    .btn-annuler:hover {
+        background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-annuler:active {
+        transform: translateY(0);
+    }
+
+    .btn-annuler:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(209, 213, 219, 0.5);
+    }
+
+    /* ========================================
+       📱 RESPONSIVE
+       ======================================== */
+    @media (max-width: 640px) {
+        .titre-form {
+            font-size: 1.5rem;
+        }
+
+        .form-field input,
+        .form-field select,
+        .form-field textarea {
+            font-size: 1rem;
+        }
+    }
+
+    /* ========================================
+       🎯 SCROLLBAR PERSONNALISÉE
+       ======================================== */
+    ::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
+        border-radius: 10px;
+        transition: background 0.3s ease;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, var(--primary-dark) 0%, #2a3a31 100%);
+    }
+
+    /* ========================================
+       🎨 AMÉLIORATIONS VISUELLES
+       ======================================== */
+    .button-group {
+        animation: fadeInUp 0.6s ease-out 0.4s both;
+    }
+
+    /* Effet de brillance sur le conteneur au chargement */
+    @keyframes shimmer {
+        0% {
+            background-position: -1000px 0;
+        }
+        100% {
+            background-position: 1000px 0;
+        }
+    }
+
+    /* États de validation */
+    .form-field input:valid {
+        border-color: #10b981;
+    }
+
+    .form-field input:invalid:not(:placeholder-shown) {
+        border-color: #ef4444;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-lg form-container">
+  <!-- Bouton retour -->
+  <div class="mb-6 flex items-center gap-3">
+    <a href="{% url 'gerer_periodes' %}"
+       class="btn-retour py-2 px-4 rounded">
+      ← Retour à la liste
+    </a>
+  </div>
+
+  <!-- Titre du formulaire -->
+  <h1 class="text-2xl font-bold mb-6 titre-form">{{ title }}</h1>
+
+  <!-- Formulaire -->
+  <form method="post" id="periodeForm" class="space-y-6">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {% for field in form %}
+        <div class="form-field">
+          <label for="{{ field.id_for_label }}" class="block text-sm font-medium mb-1">
+            {{ field.label }}
+          </label>
+          {{ field }}
+          {% if field.errors %}
+            <p class="error-message">{{ field.errors|join:', ' }}</p>
+          {% endif %}
+          {% if field.help_text %}
+            <p class="help-text">{{ field.help_text }}</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Boutons d'action -->
+    <div class="flex gap-3 button-group">
+      <button type="submit"
+              class="btn-submit py-2 px-4 rounded">
+        {{ submit_label }}
+      </button>
+      <a href="{% url 'gerer_periodes' %}"
+         class="btn-annuler py-2 px-4 rounded">
+        Annuler
+      </a>
+    </div>
+  </form>
+</div>
+
+<script>
+document.getElementById('periodeForm').addEventListener('submit', function(e){
+  const d1 = document.querySelector('input[name="date_debut"]')?.value;
+  const d2 = document.querySelector('input[name="date_fin"]')?.value;
+  if (d1 && d2 && new Date(d2) < new Date(d1)) {
+    e.preventDefault();
+    alert("La date de fin doit être postérieure à la date de début.");
+  }
+});
+</script>
+{% endblock %}

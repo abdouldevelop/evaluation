@@ -1,0 +1,681 @@
+{% extends 'fiches/base.html' %}
+{% load custom_filters %}
+{% load dict_extras %}
+{% load static %}
+
+{% block title %}Tableau de Bord - Sous-Directeur{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ========================================
+       🎨 VARIABLES CSS - CHARTE GRAPHIQUE
+       ======================================== */
+    :root {
+        --primary: #4c6559;
+        --primary-dark: #3a4f44;
+        --primary-light: #7a9882;
+        --secondary: #eea12e;
+        --secondary-dark: #d89125;
+        --secondary-light: #f5b858;
+    }
+
+    /* ========================================
+       ✨ ANIMATIONS KEYFRAMES
+       ======================================== */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.05);
+        }
+    }
+
+    /* ========================================
+       🎯 EN-TÊTE DASHBOARD
+       ======================================== */
+    .dashboard-header {
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    .welcome-text {
+        animation: slideInRight 0.6s ease-out 0.1s both;
+    }
+
+    .welcome-title {
+        color: var(--primary-dark);
+        position: relative;
+        padding-bottom: 0.5rem;
+    }
+
+    .welcome-title::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background: linear-gradient(90deg, var(--secondary) 0%, var(--secondary-light) 100%);
+        border-radius: 2px;
+        animation: slideInRight 0.6s ease-out 0.3s both;
+    }
+
+    .role-badge {
+        color: var(--primary);
+        font-weight: 600;
+    }
+
+    /* ========================================
+       🔘 BOUTON MODIFIER MOT DE PASSE
+       ======================================== */
+    .btn-password {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        animation: slideInLeft 0.6s ease-out 0.2s both;
+    }
+
+    .btn-password::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-password:hover::before {
+        left: 100%;
+    }
+
+    .btn-password:hover {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, #2a3a31 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(76, 101, 89, 0.3);
+    }
+
+    .btn-password:active {
+        transform: translateY(0);
+    }
+
+    /* ========================================
+       📋 CONTENEUR PRINCIPAL
+       ======================================== */
+    .main-dashboard {
+        animation: scaleIn 0.6s ease-out 0.2s both;
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        transition: all 0.3s ease;
+    }
+
+    .main-dashboard:hover {
+        box-shadow: 0 15px 50px rgba(76, 101, 89, 0.15);
+    }
+
+    .dashboard-title-bar {
+        background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+        color: white;
+    }
+
+    /* ========================================
+       🔍 FILTRE SERVICE
+       ======================================== */
+    .filter-form {
+        animation: fadeInUp 0.6s ease-out 0.3s both;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+        border-radius: 0.75rem;
+        margin-bottom: 1.5rem;
+        border: 2px solid #e5e7eb;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .filter-form:hover {
+        border-color: var(--primary-light);
+        box-shadow: 0 4px 12px rgba(76, 101, 89, 0.1);
+    }
+
+    .filter-label {
+        color: var(--primary-dark);
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .filter-select {
+        border: 2px solid #e5e7eb;
+        border-radius: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        transition: all 0.3s ease;
+        min-width: 200px;
+        flex: 1;
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(76, 101, 89, 0.1);
+    }
+
+    .filter-select:hover {
+        border-color: var(--primary-light);
+    }
+
+    .btn-filter {
+        background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
+        color: white;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    .btn-filter::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-filter:hover::before {
+        left: 100%;
+    }
+
+    .btn-filter:hover {
+        background: linear-gradient(135deg, var(--secondary-dark) 0%, #c17d1f 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(238, 161, 46, 0.3);
+    }
+
+    /* ========================================
+       📑 ONGLETS
+       ======================================== */
+    .tabs-container {
+        animation: fadeInUp 0.6s ease-out 0.4s both;
+    }
+
+    .tab-button {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+    }
+
+    .tab-button::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--secondary) 0%, var(--secondary-light) 100%);
+        transition: width 0.3s ease;
+    }
+
+    .tab-button:hover::after {
+        width: 80%;
+    }
+
+    .tab-button.active {
+        color: var(--secondary) !important;
+        border-bottom-color: var(--secondary) !important;
+    }
+
+    .tab-button.active::after {
+        width: 100%;
+    }
+
+    /* ========================================
+       📊 TABLEAUX
+       ======================================== */
+    .table-container {
+        animation: fadeInUp 0.6s ease-out 0.5s both;
+    }
+
+    .table-header {
+        background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+        color: white;
+    }
+
+    .table-header th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.875rem;
+        letter-spacing: 0.05em;
+    }
+
+    .table-row {
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+    }
+
+    .table-row:hover {
+        background: linear-gradient(90deg, rgba(76, 101, 89, 0.03) 0%, transparent 100%);
+        box-shadow: 0 2px 8px rgba(76, 101, 89, 0.08);
+        border-left-color: var(--secondary);
+    }
+
+    /* ========================================
+       🔘 BOUTONS ÉVALUER
+       ======================================== */
+    .btn-evaluer {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-evaluer::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.4s ease, height 0.4s ease;
+    }
+
+    .btn-evaluer:hover::before {
+        width: 200px;
+        height: 200px;
+    }
+
+    .btn-evaluer:hover {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, #2a3a31 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(76, 101, 89, 0.3);
+    }
+
+    .btn-evaluer:active {
+        transform: translateY(0);
+    }
+
+    .btn-disabled {
+        background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .btn-disabled:hover {
+        transform: none;
+        box-shadow: none;
+    }
+
+    /* ========================================
+       📭 ÉTAT VIDE
+       ======================================== */
+    .empty-state {
+        padding: 3rem 2rem;
+        background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+        border: 2px dashed #d1d5db;
+        border-radius: 0.75rem;
+        color: #6b7280;
+        transition: all 0.3s ease;
+    }
+
+    .empty-state:hover {
+        border-color: var(--primary-light);
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    }
+
+    /* ========================================
+       📱 RESPONSIVE
+       ======================================== */
+    @media (max-width: 640px) {
+        .welcome-title {
+            font-size: 1.5rem;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            font-size: 0.875rem;
+            padding: 0.75rem 0.5rem;
+        }
+
+        /* Formulaire de filtre responsive */
+        .filter-form {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1rem;
+        }
+
+        .filter-label {
+            width: 100%;
+            text-align: left;
+        }
+
+        .filter-select {
+            width: 100%;
+            min-width: unset;
+        }
+
+        .btn-filter {
+            width: 100%;
+            margin-left: 0 !important;
+            justify-content: center;
+        }
+    }
+
+    /* ========================================
+       🎯 SCROLLBAR PERSONNALISÉE
+       ======================================== */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
+        border-radius: 10px;
+        transition: background 0.3s ease;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, var(--primary-dark) 0%, #2a3a31 100%);
+    }
+
+    /* ========================================
+       🎨 ANIMATIONS SUPPLÉMENTAIRES
+       ======================================== */
+    .tab-content {
+        animation: fadeInUp 0.4s ease-out;
+    }
+
+    /* Effet de brillance périodique sur le bouton principal */
+    @keyframes shimmer {
+        0% {
+            background-position: -1000px 0;
+        }
+        100% {
+            background-position: 1000px 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+  <!-- En-tête Dashboard -->
+  <div class="dashboard-header flex flex-col sm:flex-row items-center justify-between mb-8">
+    <div class="welcome-text order-2 sm:order-1 text-center sm:text-left mt-4 sm:mt-0">
+      <h2 class="welcome-title text-3xl font-bold">Bienvenue, {{ user.get_full_name }}</h2>
+      <p class="text-gray-600 mt-1">Vous êtes connecté en tant que <span class="role-badge">Sous-Directeur</span>.</p>
+    </div>
+  </div>
+
+  <!-- Conteneur Principal -->
+  <div class="main-dashboard bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+    <!-- Barre de Titre -->
+    <div class="dashboard-title-bar py-4 px-6">
+      <h3 class="text-xl font-semibold text-center">📋 Tableau de Bord du Sous-Directeur</h3>
+    </div>
+
+    <div class="max-w-7xl mx-auto p-6">
+      <!-- Filtre Service -->
+      <form method="get" class="filter-form">
+        <label for="service" class="filter-label">Filtrer par service :</label>
+        <select name="service" id="service" class="filter-select">
+          <option value="">-- Tous les services --</option>
+          {% for svc in services %}
+            <option value="{{ svc.service__id  }}" {% if svc.service__id|stringformat:"s" == selected_service %}selected{% endif %}>
+              {{ svc.service__nom }}
+            </option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn-filter px-4 py-2 rounded">
+          Filtrer
+        </button>
+      </form>
+
+      <!-- Onglets -->
+      <div class="tabs-container border-b border-gray-200 mb-4">
+        <nav class="flex -mb-px">
+          <button class="tab-button w-1/2 py-4 px-1 text-center border-b-2 border-transparent font-medium text-sm text-gray-500" data-tab="evaluer-agents">
+            📝 Évaluer les Agents
+          </button>
+          <button class="tab-button w-1/2 py-4 px-1 text-center border-b-2 border-transparent font-medium text-sm text-gray-500" data-tab="evaluer-responsables">
+            📋 Évaluer les Responsables
+          </button>
+        </nav>
+      </div>
+
+      <!-- Contenu Onglet: Évaluer les Agents -->
+      <div id="evaluer-agents" class="tab-content">
+        <div class="table-container overflow-x-auto">
+          <table class="w-full border-collapse">
+            <thead>
+              <tr class="table-header">
+                <th class="py-3 px-4 text-left">Matricule</th>
+                <th class="py-3 px-4 text-left">Nom</th>
+                <th class="py-3 px-4 text-left">Service</th>
+                <th class="py-3 px-4 text-center">
+                  Action
+                  {% if periode_active %}
+                  <span class="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">S{{ periode_active.semestre }}</span>
+                  {% endif %}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for agent in agents %}
+                <tr class="table-row border-b">
+                  <td class="py-3 px-4">{{ agent.matricule }}</td>
+                  <td class="py-3 px-4">{{ agent.nom }} {{ agent.prenoms }}</td>
+                  <td class="py-3 px-4">{{ agent.service.nom }}</td>
+                  <td class="py-3 px-4 text-center">
+                    {% if periode_active %}
+                      {# Déterminer le semestre actif #}
+                      {% if periode_active.semestre == 1 %}
+                        {% with ev=evaluations_data|get_item:agent.id|get_item:'s1' %}
+                        {% if ev and ev.moyenne_generale and ev.moyenne_generale > 0 %}
+                          <a href="{% url 'voir_mes_notes_evaluation' ev.id %}" class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded inline-flex items-center justify-center transition-colors" title="Voir les détails de l'évaluation">
+                            👁️ Détails S1
+                          </a>
+                        {% else %}
+                          <a href="{% url 'evaluer_agent_sous_directeur' agent.id %}"
+                            class="btn-evaluer px-3 py-1 text-white text-sm rounded inline-flex items-center justify-center">
+                            🖋️ Évaluer S1
+                          </a>
+                        {% endif %}
+                        {% endwith %}
+                      {% else %}
+                        {# Semestre 2 actif #}
+                        {% with ev=evaluations_data|get_item:agent.id|get_item:'s2' %}
+                        {% if ev and ev.moyenne_generale and ev.moyenne_generale > 0 %}
+                          <a href="{% url 'voir_mes_notes_evaluation' ev.id %}" class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded inline-flex items-center justify-center transition-colors" title="Voir les détails de l'évaluation">
+                            👁️ Détails S2
+                          </a>
+                        {% else %}
+                          <a href="{% url 'evaluer_agent_sous_directeur' agent.id %}"
+                            class="btn-evaluer px-3 py-1 text-white text-sm rounded inline-flex items-center justify-center">
+                            🖋️ Évaluer S2
+                          </a>
+                        {% endif %}
+                        {% endwith %}
+                      {% endif %}
+                    {% else %}
+                      <button class="btn-disabled px-3 py-1 text-white text-sm rounded" disabled>
+                        🔒 Pas de période active
+                      </button>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="py-8">
+                    <div class="empty-state text-center">📭 Aucun agent trouvé.</div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Contenu Onglet: Évaluer les Responsables -->
+      <div id="evaluer-responsables" class="tab-content hidden">
+        <div class="table-container overflow-x-auto">
+          <table class="w-full border-collapse">
+            <thead>
+              <tr class="table-header">
+                <th class="py-3 px-4 text-left">Matricule</th>
+                <th class="py-3 px-4 text-left">Nom</th>
+                <th class="py-3 px-4 text-left">Service</th>
+                <th class="py-3 px-4 text-center">
+                  Action
+                  {% if periode_active %}
+                  <span class="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">S{{ periode_active.semestre }}</span>
+                  {% endif %}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for responsable in responsables %}
+                <tr class="table-row border-b">
+                  <td class="py-3 px-4">{{ responsable.matricule }}</td>
+                  <td class="py-3 px-4">{{ responsable.nom }} {{ responsable.prenoms }}</td>
+                  <td class="py-3 px-4">{{ responsable.service.nom }}</td>
+                  <td class="py-3 px-4 text-center">
+                    {% if periode_active %}
+                      {# Déterminer le semestre actif #}
+                      {% if periode_active.semestre == 1 %}
+                        {% with ev=evaluations_data_responsables|get_item:responsable.id|get_item:'s1' %}
+                        {% if ev and ev.moyenne_generale and ev.moyenne_generale > 0 %}
+                          <a href="{% url 'voir_mes_notes_evaluation' ev.id %}" class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded inline-flex items-center justify-center transition-colors" title="Voir les détails de l'évaluation">
+                            👁️ Détails S1
+                          </a>
+                        {% else %}
+                          <a href="{% url 'evaluer_responsable_sous_directeur' responsable.id %}"
+                            class="btn-evaluer inline-flex items-center justify-center px-3 py-1 text-white text-sm rounded">
+                            🖋️ Évaluer S1
+                          </a>
+                        {% endif %}
+                        {% endwith %}
+                      {% else %}
+                        {# Semestre 2 actif #}
+                        {% with ev=evaluations_data_responsables|get_item:responsable.id|get_item:'s2' %}
+                        {% if ev and ev.moyenne_generale and ev.moyenne_generale > 0 %}
+                          <a href="{% url 'voir_mes_notes_evaluation' ev.id %}" class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded inline-flex items-center justify-center transition-colors" title="Voir les détails de l'évaluation">
+                            👁️ Détails S2
+                          </a>
+                        {% else %}
+                          <a href="{% url 'evaluer_responsable_sous_directeur' responsable.id %}"
+                            class="btn-evaluer inline-flex items-center justify-center px-3 py-1 text-white text-sm rounded">
+                            🖋️ Évaluer S2
+                          </a>
+                        {% endif %}
+                        {% endwith %}
+                      {% endif %}
+                    {% else %}
+                      <button class="btn-disabled px-3 py-1 text-white text-sm rounded" disabled>
+                        🔒 Pas de période active
+                      </button>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="py-8">
+                    <div class="empty-state text-center">📭 Aucun responsable trouvé.</div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- JS onglets -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // reset styles
+        tabButtons.forEach(b=> {
+          b.classList.remove('active');
+          b.classList.add('text-gray-500');
+        });
+        // activate clicked
+        btn.classList.remove('text-gray-500');
+        btn.classList.add('active');
+        // show/hide
+        tabContents.forEach(c=> c.classList.add('hidden'));
+        document.getElementById(btn.getAttribute('data-tab')).classList.remove('hidden');
+      });
+    });
+    // démarrer sur le premier onglet
+    tabButtons[0].click();
+  });
+</script>
+{% endblock %}

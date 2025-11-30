@@ -1,0 +1,79 @@
+{% extends 'fiches/base.html' %}
+{% load static %}
+
+{% block title %}Modifier une Évaluation{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Header Section -->
+    <div class="mb-8 flex flex-col md:flex-row items-center md:items-start justify-between">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4 md:mb-0">
+            Modifier l'Évaluation de {{ evaluation.agent.nom }} {{ evaluation.agent.prenoms }}
+        </h2>
+        <a href="{% url 'liste_evaluations' %}" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Retour
+        </a>
+    </div>
+
+    <!-- Form Section -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="bg-green-custom text-white py-4 px-6">
+            <h3 class="text-xl font-semibold">Formulaire de Modification</h3>
+        </div>
+        <div class="p-6">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {% for field in form %}
+                    <div class="{% if field.name == 'avis_directeur' %}col-span-1 md:col-span-2{% endif %}">
+                        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            {{ field.label }}
+                        </label>
+                        {{ field }}
+                        {% if field.help_text %}
+                        <p class="mt-1 text-sm text-gray-500">{{ field.help_text }}</p>
+                        {% endif %}
+                        {% if field.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ field.errors }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 pt-4 border-t border-gray-200">
+                    <button type="submit" class="px-6 py-3 bg-green-custom text-white rounded-lg shadow-md hover:bg-green-custom/90 transition-all duration-300 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Enregistrer les modifications
+                    </button>
+                    <a href="{% url 'liste_evaluations' %}" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-300 flex items-center justify-center">
+                        Annuler
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts de style pour les champs Django avec Tailwind -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Appliquer Tailwind CSS aux champs de formulaire
+        const textInputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="date"], input[type="number"], select');
+        textInputs.forEach(input => {
+            input.classList.add('w-full', 'px-3', 'py-2', 'border', 'border-gray-300', 'rounded-md', 'shadow-sm', 'focus:outline-none', 'focus:ring-2', 'focus:ring-orange-custom', 'focus:border-orange-custom');
+        });
+
+        // Style spécifique pour les textareas
+        const textareas = document.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+            textarea.classList.add('w-full', 'px-3', 'py-2', 'border', 'border-gray-300', 'rounded-md', 'shadow-sm', 'focus:outline-none', 'focus:ring-2', 'focus:ring-orange-custom', 'focus:border-orange-custom', 'h-32');
+        });
+    });
+</script>
+{% endblock %}

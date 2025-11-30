@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333333;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #4c6559;
+            padding-bottom: 20px;
+        }
+        .header img {
+            max-width: 120px;
+            height: auto;
+        }
+        .header-text {
+            font-weight: bold;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        .document-title {
+            font-size: 22px;
+            font-weight: bold;
+            margin: 15px 0;
+            text-align: center;
+            text-transform: uppercase;
+            color: #4c6559;
+        }
+        h2 {
+            color: #4c6559;
+            font-size: 18px;
+            margin-top: 30px;
+            margin-bottom: 10px;
+            text-align: center;
+            border-bottom: 1px solid #ea9113;
+            padding-bottom: 5px;
+        }
+        h3 {
+            color: #4c6559;
+            font-size: 16px;
+            background-color: #f8f8f8;
+            padding: 8px;
+            border-left: 4px solid #ea9113;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0 25px 0;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #ea9113;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .moyenne-row {
+            background-color: #4c6559 !important;
+            color: white;
+            font-weight: bold;
+        }
+        .signature {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-block {
+            width: 45%;
+        }
+        .signature-line {
+            border-bottom: 1px solid #333333;
+            margin-top: 25px;
+            height: 30px;
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 11px;
+            color: #666666;
+            border-top: 1px solid #dddddd;
+            padding-top: 20px;
+        }
+        .avis-section {
+            background-color: #f8f8f8;
+            border: 1px solid #dddddd;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .note-section {
+            background-color: #f0f7f3;
+            border: 1px solid #4c6559;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-text">AGENCE D'EXÉCUTION</div>
+            <div class="header-text">RÉPUBLIQUE DE CÔTE D'IVOIRE</div>
+            <div class="document-title">FICHE D'ÉVALUATION DES AGENTS</div>
+        </div>
+
+        <h2>ANNÉE {{ evaluations.0.annee }} (Semestre {{ evaluations.0.semestre }})</h2>
+
+        <h3>I. IDENTIFICATION DU SALARIÉ</h3>
+        <table>
+            <tr><td width="40%"><strong>Nom et Prénoms :</strong></td><td>{{ evaluations.0.agent.nom }} {{ evaluations.0.agent.prenoms }}</td></tr>
+            <tr><td><strong>Matricule :</strong></td><td>{{ evaluations.0.agent.matricule }}</td></tr>
+            <tr><td><strong>Date d'embauche :</strong></td><td>{{ evaluations.0.agent.date_embauche }}</td></tr>
+            <tr><td><strong>Catégorie :</strong></td><td>{{ evaluations.0.agent.categorie }}</td></tr>
+            <tr><td><strong>Direction :</strong></td><td>{{ evaluations.0.agent.direction.nom }}</td></tr>
+            <tr><td><strong>Sous-Direction :</strong></td><td>{{ evaluations.0.agent.sous_direction }}</td></tr>
+            <tr><td><strong>Service :</strong></td><td>{{ evaluations.0.agent.service }}</td></tr>
+        </table>
+
+        <h3>II. ÉVALUATION DU RENDEMENT</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th width="70%">Critères</th>
+                    <th width="30%">Note</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Connaissances et aptitudes professionnelles</td><td>{{ evaluations.0.connaissances }} / 5</td></tr>
+                <tr><td>Esprit d'initiative</td><td>{{ evaluations.0.initiative }} / 5</td></tr>
+                <tr><td>Puissance du travail et rendement</td><td>{{ evaluations.0.rendement }} / 5</td></tr>
+                <tr><td>Respect des objectifs</td><td>{{ evaluations.0.respect_objectifs }} / 5</td></tr>
+                <tr class="moyenne-row"><td><strong>Moyenne (M1)</strong></td><td>{{ evaluations.0.moyenne_rendement|floatformat:2 }} / 5</td></tr>
+            </tbody>
+        </table>
+
+        <h3>III. ÉVALUATION DU COMPORTEMENT</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th width="70%">Critères</th>
+                    <th width="30%">Note</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Civisme, intégrité et moralité</td><td>{{ evaluations.0.civisme }} / 5</td></tr>
+                <tr><td>Sens du service public</td><td>{{ evaluations.0.service_public }} / 5</td></tr>
+                <tr><td>Sens social et relations humaines</td><td>{{ evaluations.0.relations_humaines }} / 5</td></tr>
+                <tr><td>Esprit de discipline</td><td>{{ evaluations.0.discipline }} / 5</td></tr>
+                <tr><td>Ponctualité</td><td>{{ evaluations.0.ponctualité }} / 5</td></tr>
+                <tr><td>Assiduité</td><td>{{ evaluations.0.assiduite }} / 5</td></tr>
+                <tr><td>Tenue vestimentaire</td><td>{{ evaluations.0.tenue }} / 5</td></tr>
+                <tr class="moyenne-row"><td><strong>Moyenne (M2)</strong></td><td>{{ evaluations.0.moyenne_comportement|floatformat:2 }} / 5</td></tr>
+            </tbody>
+        </table>
+
+        <h3>IV. NOTE FINALE</h3>
+        <div class="note-section">
+            <table>
+                <tr>
+                    <td width="40%"><strong>Performance Globale</strong></td>
+                    <td>{{ evaluations.0.moyenne_rendement|floatformat:2 }} / 5 + {{ evaluations.0.moyenne_comportement|floatformat:2 }} / 5 = {{ evaluations.0.moyenne_generale|floatformat:2 }} / 5</td>
+                </tr>
+            </table>
+        </div>
+
+        <h3>V. AVIS DU DIRECTEUR</h3>
+        <div class="avis-section">
+            <p>{{ evaluations.0.avis_directeur|default:"Aucun avis fourni" }}</p>
+        </div>
+
+        <h3>VI. AVIS DE L'AGENT ÉVALUÉ</h3>
+        <div class="avis-section">
+            <p>{{ evaluations.0.avis_agent|default:"Aucun avis fourni" }}</p>
+        </div>
+
+        <div class="signature">
+            <div class="signature-block">
+                <p><strong>Le Directeur</strong></p>
+                <p>Nom et Prénoms : ______________________</p>
+                <div class="signature-line"></div>
+                <p>Date : ___ / ___ / _______</p>
+            </div>
+            <div class="signature-block">
+                <p><strong>L'Agent Évalué</strong></p>
+                <p>Nom et Prénoms : ______________________</p>
+                <div class="signature-line"></div>
+                <p>Date : ___ / ___ / _______</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Siège social : Abidjan, Cocody, Riviera Bonoumin, lot 1883, ilot 84774</p>
+            <p>Adresse postale : 01 BP V 55 Abidjan 01 • Téléphone : 27 22 59 96 10</p>
+            <p>Email : statistiques@stat.plan.gouv.ci</p>
+        </div>
+    </div>
+</body>
+</html>

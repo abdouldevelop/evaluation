@@ -1,0 +1,203 @@
+<!-- fiches/ajouter_avis_agent.html -->
+{% extends 'fiches/base.html' %}
+
+{% block title %}
+Ajouter/Modifier Avis - Évaluation {{ evaluation.annee }} - {{ evaluation.get_semestre_display }}
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-orange-50 via-white to-blue-50 py-8">
+    <div class="max-w-4xl mx-auto px-4">
+        <!-- Header avec icône et titre -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full mb-4 shadow-lg">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+            </div>
+            <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2">
+                Ajouter/Modifier Votre Avis
+            </h1>
+            <p class="text-gray-600 text-lg">
+                Évaluation {{ evaluation.annee }} - {{ evaluation.get_semestre_display }}
+            </p>
+        </div>
+            <div class="p-8">
+                <!-- Messages -->
+                {% if messages %}
+                    <div class="mb-6 space-y-2">
+                        {% for message in messages %}
+                            <div class="flex items-center p-4 rounded-xl {% if message.tags == 'error' %}bg-red-50 border-l-4 border-red-400{% elif message.tags == 'success' %}bg-green-50 border-l-4 border-green-400{% else %}bg-blue-50 border-l-4 border-blue-400{% endif %}">
+                                <div class="flex-shrink-0">
+                                    {% if message.tags == 'error' %}
+                                        <svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                        </svg>
+                                    {% elif message.tags == 'success' %}
+                                        <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                        </svg>
+                                    {% else %}
+                                        <svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                        </svg>
+                                    {% endif %}
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium {% if message.tags == 'error' %}text-red-800{% elif message.tags == 'success' %}text-green-800{% else %}text-blue-800{% endif %}">
+                                        {{ message }}
+                                    </p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Formulaire -->
+                {% if not is_signed %}
+                    <form method="post" action="{% url 'ajouter_avis_agent' evaluation.id %}" class="space-y-6" id="avisForm" onsubmit="return validateForm()">
+                        {% csrf_token %}
+
+                        <div class="relative">
+                            <label for="avis_agent" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                                </svg>
+                                Votre avis
+                            </label>
+                            <textarea
+                                name="avis_agent"
+                                id="avis_agent"
+                                class="w-full px-4 py-4 bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none h-40 text-gray-800 placeholder-gray-400 transition-all duration-300"
+                                placeholder="Exprimez votre avis sur cette évaluation... (500 caractères max)"
+                                oninput="updateCharCount()"
+                            >{{ evaluation.avis_agent|default_if_none:"" }}</textarea>
+
+                            <!-- Barre de progression des caractères -->
+                            <div class="mt-3 bg-gray-100 rounded-full h-2">
+                                <div id="progressBar" class="bg-gradient-to-r from-orange-400 to-orange-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+
+                            <!-- Compteur et erreur -->
+                            <div class="flex justify-between items-center mt-2">
+                                <p id="char-count" class="text-sm font-medium text-gray-600">0/500 caractères</p>
+                                <p id="error-message" class="text-red-500 text-sm font-medium"></p>
+                            </div>
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="w-full bg-green-custom from-orange-500 to-orange-600 text-white py-4 px-6 rounded-xl font-semibold text-lg shadow-lg hover:from-orange-600 hover:to-orange-700 transform hover:scale-[1.02] transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-orange-300"
+                        >
+                            <span class="flex items-center justify-center">
+                                {% if evaluation.avis_agent %}
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    Mettre à jour mon avis
+                                {% else %}
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    Soumettre mon avis
+                                {% endif %}
+                            </span>
+                        </button>
+                    </form>
+                {% else %}
+                    <div class="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6 text-center">
+                        <div class="flex items-center justify-center mb-3">
+                            <svg class="w-6 h-6 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-blue-800 mb-2">Avis verrouillé</h3>
+                        <p class="text-blue-600">Votre avis est verrouillé car l'évaluation a été signée par le directeur.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Bouton retour -->
+        <div class="text-center">
+            <a href="{% url 'dashboard_agent' %}"
+               class="inline-flex items-center px-6 py-3 bg-white border-2 border-gray-200 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-orange-300 transition-all duration-300 shadow-sm">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Retour au tableau de bord
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('avis_agent').addEventListener('input', function(e) {
+        const forbiddenChars = /[@/#&"#~{[|``:+°)0-9;*ù^()§_?=*$<>\\]/g;
+        this.value = this.value.replace(forbiddenChars, '');
+    });
+
+    function validateForm() {
+        const avis = document.getElementById('avis_agent').value;
+        const pattern = /^[a-zA-Z\s.,'-]+$/;
+        const errorMessage = document.getElementById('error-message');
+
+        if (!avis) {
+            errorMessage.textContent = "L'avis ne peut pas être vide.";
+            return false;
+        }
+
+        if (avis.length > 500) {
+            errorMessage.textContent = "L'avis ne doit pas dépasser 500 caractères.";
+            return false;
+        }
+
+        if (!pattern.test(avis)) {
+            errorMessage.textContent = "L'avis ne doit contenir ni chiffres ni caractères spéciaux.";
+            return false;
+        }
+
+        errorMessage.textContent = "";
+        return true;
+    }
+
+    function updateCharCount() {
+        const avis = document.getElementById('avis_agent').value;
+        const charCount = document.getElementById('char-count');
+        const progressBar = document.getElementById('progressBar');
+
+        const length = avis.length;
+        const percentage = (length / 500) * 100;
+
+        charCount.textContent = `${length}/500 caractères`;
+        progressBar.style.width = `${Math.min(percentage, 100)}%`;
+
+        if (length > 500) {
+            charCount.classList.add('text-red-500');
+            progressBar.classList.add('bg-red-500');
+        } else if (length > 400) {
+            charCount.classList.remove('text-red-500');
+            charCount.classList.add('text-orange-500');
+            progressBar.classList.remove('bg-red-500');
+            progressBar.classList.add('bg-orange-500');
+        } else {
+            charCount.classList.remove('text-red-500', 'text-orange-500');
+            progressBar.classList.remove('bg-red-500', 'bg-orange-500');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', updateCharCount);
+</script>
+
+<style>
+    /* Animation d'apparition */
+    .fade-in {
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}

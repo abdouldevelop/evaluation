@@ -1,0 +1,194 @@
+{# fiches/templates/fiches/evaluer_agent.html #}
+{% extends 'fiches/base.html' %}
+{% load static %}
+{% block title %}Évaluation de {{ agent.nom }} – Semestre {{ semestre }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+  <form method="post" id="evaluationForm" class="space-y-6">
+    {% csrf_token %}
+    {# Champs cachés #}
+    {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+    <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+        📄 Fiche d'Évaluation - {{ agent.nom }} {{ agent.prenoms }}
+    </h2>
+    <!-- 🔹 Informations du Personnel -->
+    <div class="bg-green-custom text-white text-center py-4">
+      <h3 class="text-xl font-semibold">Informations du Personnel</h3>
+    </div>
+    <table class="w-full border-collapse mb-6">
+      <tr>
+        <td class="px-4 py-2 font-semibold">Nom et Prénoms :</td>
+        <td class="px-4 py-2">{{ agent.nom }} {{ agent.prenoms }}</td>
+      </tr>
+      <tr>
+        <td class="px-4 py-2 font-semibold">Matricule :</td>
+        <td class="px-4 py-2">{{ agent.matricule }}</td>
+      </tr>
+      <tr>
+        <td class="px-4 py-2 font-semibold">Date d'embauche :</td>
+        <td class="px-4 py-2">{{ agent.date_embauche }}</td>
+      </tr>
+      <tr>
+        <td class="px-4 py-2 font-semibold">Catégorie :</td>
+        <td class="px-4 py-2">{{ agent.categorie }}</td>
+      </tr>
+      <tr>
+        <td class="px-4 py-2 font-semibold">Direction :</td>
+        <td class="px-4 py-2">{{ agent.direction.nom }}</td>
+      </tr>
+      <tr>
+        <td class="px-4 py-2 font-semibold">Sous-direction :</td>
+        <td class="px-4 py-2">{{ agent.sous_direction.nom|default:"N/A" }}</td>
+      </tr>
+      <tr>
+        <td class="px-4 py-2 font-semibold">Service :</td>
+        <td class="px-4 py-2">{{ agent.service.nom|default:"N/A" }}</td>
+      </tr>
+      <tr>
+        <td class="px-4 py-2 font-semibold">Type de Personnel :</td>
+        <td class="px-4 py-2">{{ agent.get_type_personnel_display }}</td>
+      </tr>
+    </table>
+
+    <!-- 🔹 Informations Générales sur l'Évaluation -->
+    <div class="mb-6">
+      <h3 class="text-lg font-semibold text-gray-700 mb-3">📆 Informations de l'Évaluation</h3>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label for="id_annee" class="block text-sm font-medium text-gray-700">Année :</label>
+          {{ form.annee }}
+        </div>
+        <div>
+          <label for="id_semestre" class="block text-sm font-medium text-gray-700">Semestre :</label>
+          {{ form.semestre }}
+        </div>
+        <div class="col-span-2">
+          <label for="id_type_personnel" class="block text-sm font-medium text-gray-700">Type de Personnel :</label>
+          {{ form.type_personnel }}
+        </div>
+      </div>
+    </div>
+
+    {# Affichage des erreurs #}
+    {% if form.non_field_errors %}
+      <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4">
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+    {% for field in form.visible_fields %}
+      {% for err in field.errors %}
+        <div class="text-red-600 text-sm mb-1">{{ field.label }} : {{ err }}</div>
+      {% endfor %}
+    {% endfor %}
+
+    <!-- 🔹 A- Rendement -->
+    <h3 class="text-xl font-semibold text-orange-custom mb-4">📊 A- Évaluation du Rendement</h3>
+    <table class="w-full border-collapse mb-6">
+      <thead>
+        <tr class="bg-green-custom text-white">
+          <th class="px-4 py-2 text-left">Critère</th>
+          <th class="px-4 py-2 text-left w-40">Note CS</th>
+          <th class="px-4 py-2 text-left">Justif. CS</th>
+          <th class="px-4 py-2 text-left w-40">Note SD</th>
+          <th class="px-4 py-2 text-left">Justif. SD</th>
+          <th class="px-4 py-2 text-left w-40">Note Dir.</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in champs|slice:":4" %}
+        <tr class="border-b hover:bg-gray-50">
+          <td class="px-4 py-2">{{ c.label }}</td>
+          <td class="px-4 py-2 text-center">{{ c.cs_note|default:"–" }}</td>
+          <td class="px-4 py-2 whitespace-pre-wrap">{{ c.cs_just }}</td>
+          <td class="px-4 py-2 text-center">{{ c.sd_note|default:"–" }}</td>
+          <td class="px-4 py-2 whitespace-pre-wrap">{{ c.sd_just }}</td>
+          <td class="px-4 py-2">
+            {{ c.field }}
+            <div id="justif_{{ c.field.id_for_label }}" class="hidden mt-1">
+              <textarea name="{{ c.field.name }}_justif" rows="2" class="w-full border rounded">{{ c.dir_just }}</textarea>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- 🔹 C- Comportement -->
+    <h3 class="text-xl font-semibold text-gray-700 mb-4">📊 C- Évaluation du Comportement</h3>
+    <table class="w-full border-collapse mb-6">
+      <thead>
+        <tr class="bg-green-custom text-white">
+          <th class="px-4 py-2 text-left">Critère</th>
+          <th class="px-4 py-2 text-left w-40">Note CS</th>
+          <th class="px-4 py-2 text-left">Justif. CS</th>
+          <th class="px-4 py-2 text-left w-40">Note SD</th>
+          <th class="px-4 py-2 text-left">Justif. SD</th>
+          <th class="px-4 py-2 text-left w-40">Note Dir.</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in champs|slice:"4:11" %}
+        <tr class="border-b hover:bg-gray-50">
+          <td class="px-4 py-2">{{ c.label }}</td>
+          <td class="px-4 py-2 text-center">{{ c.cs_note|default:"–" }}</td>
+          <td class="px-4 py-2 whitespace-pre-wrap">{{ c.cs_just }}</td>
+          <td class="px-4 py-2 text-center">{{ c.sd_note|default:"–" }}</td>
+          <td class="px-4 py-2 whitespace-pre-wrap">{{ c.sd_just }}</td>
+          <td class="px-4 py-2">
+            {{ c.field }}
+            <div id="justif_{{ c.field.id_for_label }}" class="hidden mt-1">
+              <textarea name="{{ c.field.name }}_justif" rows="2" class="w-full border rounded">{{ c.dir_just }}</textarea>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- 🔹 Avis du Directeur -->
+    <div class="mb-6">
+      <label for="id_avis_directeur" class="block text-sm font-medium text-gray-700">Avis du Directeur :</label>
+      {{ form.avis_directeur }}
+    </div>
+
+    <!-- 🔹 Bouton de soumission -->
+    <div class="text-center mt-6">
+      <button type="submit" class="bg-green-custom text-white px-6 py-3 rounded-lg hover:bg-green-custom/90 transition-all duration-300">
+        ✅ Enregistrer l'Évaluation
+      </button>
+      <a href="{% url 'dashboard_directeur' %}" class="ml-4 bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-all duration-300">
+        ⬅️ Retour
+      </a>
+    </div>
+  </form>
+</div>
+
+<!-- 🔹 Scripts JavaScript pour la gestion des justifications -->
+<script>
+  function toggleJustification(select) {
+    const val = parseInt(select.value);
+    const div = document.getElementById("justif_" + select.id);
+    if (!div) return;
+    if (val === 1 || val === 5) {
+      div.classList.remove("hidden");
+    } else {
+      div.classList.add("hidden");
+      div.querySelector("textarea").value = "";
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Ajout des classes Tailwind et activation de toggleJustification
+    document.querySelectorAll("select:not([name$='_justif'])").forEach(sel => {
+      sel.classList.add('w-full','px-3','py-2','border','border-gray-300','rounded-md','shadow-sm','focus:outline-none','focus:ring-2','focus:ring-orange-custom','focus:border-orange-custom');
+      sel.addEventListener('change', () => toggleJustification(sel));
+      toggleJustification(sel);
+    });
+    // Style pour textareas
+    document.querySelectorAll('textarea').forEach(ta => {
+      ta.classList.add('w-full','px-3','py-2','border','border-gray-300','rounded-md','shadow-sm','focus:outline-none','focus:ring-2','focus:ring-orange-custom','focus:border-orange-custom','h-32');
+    });
+  });
+</script>
+{% endblock %}

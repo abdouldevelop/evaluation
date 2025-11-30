@@ -1,0 +1,38 @@
+{% extends 'fiches/base.html' %}
+{% block content %}
+<div class="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+  <div class="mb-6 flex items-center gap-3">
+    <button type="button" onclick="history.back()"
+            class="bg-gray-300 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-400">
+      Retour
+    </button>
+
+    <a href="{% url 'ajouter_periode' %}"
+       class="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">
+      ➕ Enregistrer une période
+    </a>
+  </div>
+
+  <h1 class="text-2xl font-bold text-gray-800 mb-6">Gestion des périodes d’évaluation</h1>
+
+  {% for p in periodes %}
+    <div class="flex items-center justify-between py-4 border-b border-gray-200">
+      <div>
+        <strong class="text-gray-800">{{ p.annee }} – Sem. {{ p.get_semestre_display }}</strong>
+        <span class="text-gray-500 ml-1">
+          du {{ p.date_debut|date:"d/m/Y" }} au {{ p.date_fin|date:"d/m/Y" }}
+        </span>
+        {% if p.active %}
+          <span class="ml-3 inline-block bg-emerald-500 text-white text-sm px-2 py-1 rounded">Actif</span>
+        {% endif %}
+      </div>
+      <a href="{% url 'modifier_periode' p.id %}"
+         class="bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-700">
+        ✏️ Modifier
+      </a>
+    </div>
+  {% empty %}
+    <p class="text-gray-600">Aucune période définie.</p>
+  {% endfor %}
+</div>
+{% endblock %}

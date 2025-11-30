@@ -1,0 +1,176 @@
+{% extends 'fiches/base.html' %}
+{% load static %}
+
+{% block title %}Évaluation de {{ agent.nom }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">📄 Fiche d'Évaluation - {{ agent.nom }} {{ agent.prenoms }}</h2>
+
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <form method="post">
+            {% csrf_token %}
+
+            <!-- 🔹 Identification de l'Agent
+            <h3 class="text-xl font-semibold  mb-6 bg-gray-700 text-white text-center">Informations du Personnel</h3> -->
+            <div class="bg-green-custom text-white text-center py-4">
+                <h3 class="text-xl font-semibold">Informations du Personnel</h3>
+            </div>
+            <table class="w-full border-collapse mb-6">
+                <tr><td class="px-4 py-2 font-semibold">Nom et Prénoms :</td><td class="px-4 py-2">{{ agent.nom }} {{ agent.prenoms }}</td></tr>
+                <tr><td class="px-4 py-2 font-semibold">Matricule :</td><td class="px-4 py-2">{{ agent.matricule }}</td></tr>
+                <tr><td class="px-4 py-2 font-semibold">Date d'embauche :</td><td class="px-4 py-2">{{ agent.date_embauche }}</td></tr>
+                <tr><td class="px-4 py-2 font-semibold">Catégorie :</td><td class="px-4 py-2">{{ agent.categorie }}</td></tr>
+                <tr><td class="px-4 py-2 font-semibold">Direction :</td><td class="px-4 py-2">{{ agent.direction.nom }}</td></tr>
+                <tr><td class="px-4 py-2 font-semibold">Sous-direction :</td><td class="px-4 py-2">{{ agent.sous_direction|default:"N/A" }}</td></tr>
+                <tr><td class="px-4 py-2 font-semibold">Service :</td><td class="px-4 py-2">{{ agent.service|default:"N/A" }}</td></tr>
+                <tr><td class="px-4 py-2 font-semibold">Type de Personnel :</td><td class="px-4 py-2">
+                    {% if agent.type_personnel == "responsable" %}
+                        🔹 Responsable
+                    {% else %}
+                        🔹 Agent
+                    {% endif %}
+                </td></tr>
+            </table>
+            <!-- 🔹 Informations Générales sur l'Évaluation -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-3">📆 Informations de l'Évaluation</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="id_annee" class="block text-sm font-medium text-gray-700">Année :</label>
+                        {{ form.annee }}
+                    </div>
+                    <div>
+                        <label for="id_semestre" class="block text-sm font-medium text-gray-700">Semestre :</label>
+                        {{ form.semestre }}
+                    </div>
+                    <div class="col-span-2">
+                        <label for="id_type_personnel" class="block text-sm font-medium text-gray-700">Type de Personnel :</label>
+                        {{ form.type_personnel }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 🔹 Évaluation du Rendement -->
+            <h3 class="text-xl font-semibold text-orange-custom mb-4">📊 A- Évaluation du Rendement</h3>
+            <table class="w-full border-collapse mb-6">
+                <thead>
+                    <tr class="bg-green-custom text-white">
+                        <th class="py-3 px-4 text-left font-semibold">Critères</th>
+                        <th class="py-3 px-4 text-left font-semibold w-40">Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td class="px-4 py-2">Connaissances</td><td class="px-4 py-2">{{ form.connaissances }}</td></tr>
+                    <tr><td class="px-4 py-2">Esprit d'initiative</td><td class="px-4 py-2">{{ form.initiative }}</td></tr>
+                    <tr><td class="px-4 py-2">Rendement</td><td class="px-4 py-2">{{ form.rendement }}</td></tr>
+                    <tr><td class="px-4 py-2">Respect des objectifs</td><td class="px-4 py-2">{{ form.respect_objectifs }}</td></tr>
+                </tbody>
+            </table>
+
+            {% if agent.type_personnel == "responsable" %}
+            <!-- 🔹 Évaluation des Capacités Managériales (pour Responsables uniquement) -->
+            <h3 class="text-xl font-semibold text-blue-600 mb-4">📊 B- Évaluation des Capacités Managériales</h3>
+            <table class="w-full border-collapse mb-6">
+                <thead>
+                    <tr class="bg-blue-600 text-white">
+                        <th class="py-3 px-4 text-left font-semibold">Critères</th>
+                        <th class="py-3 px-4 text-left font-semibold w-40">Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td class="px-4 py-2">Leadership</td><td class="px-4 py-2">{{ form.leadership }}</td></tr>
+                    <tr><td class="px-4 py-2">Planification</td><td class="px-4 py-2">{{ form.planification }}</td></tr>
+                    <tr><td class="px-4 py-2">Travail en équipe</td><td class="px-4 py-2">{{ form.travail_equipe }}</td></tr>
+                    <tr><td class="px-4 py-2">Résolution de problèmes</td><td class="px-4 py-2">{{ form.resolution_problemes }}</td></tr>
+                    <tr><td class="px-4 py-2">Prise de décision</td><td class="px-4 py-2">{{ form.prise_decision }}</td></tr>
+                </tbody>
+            </table>
+            {% endif %}
+
+            <!-- 🔹 Évaluation du Comportement -->
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">📊 C- Évaluation du Comportement</h3>
+            <table class="w-full border-collapse mb-6">
+                <thead>
+                    <tr class="bg-gray-700 text-white">
+                        <th class="py-3 px-4 text-left font-semibold">Critères</th>
+                        <th class="py-3 px-4 text-left font-semibold w-40">Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td class="px-4 py-2">Civisme</td><td class="px-4 py-2">{{ form.civisme }}</td></tr>
+                    <tr><td class="px-4 py-2">Service public</td><td class="px-4 py-2">{{ form.service_public }}</td></tr>
+                    <tr><td class="px-4 py-2">Relations humaines</td><td class="px-4 py-2">{{ form.relations_humaines }}</td></tr>
+                    <tr><td class="px-4 py-2">Discipline</td><td class="px-4 py-2">{{ form.discipline }}</td></tr>
+                    <tr><td class="px-4 py-2">Ponctualité</td><td class="px-4 py-2">{{ form.ponctualité }}</td></tr>
+                    <tr><td class="px-4 py-2">Assiduité</td><td class="px-4 py-2">{{ form.assiduite }}</td></tr>
+                    <tr><td class="px-4 py-2">Tenue</td><td class="px-4 py-2">{{ form.tenue }}</td></tr>
+                </tbody>
+            </table>
+
+            <!-- 🔹 Bouton de soumission -->
+            <div class="text-center mt-6">
+                <button type="submit" class="bg-green-custom text-white px-6 py-3 rounded-lg hover:bg-green-custom/90 transition-all duration-300">
+                    ✅ Enregistrer l'Évaluation
+                </button>
+                <a href="{% url 'dashboard_directeur' %}" class="ml-4 bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-all duration-300">
+                    ⬅️ Retour
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- 🔹 Scripts de style pour les champs Django avec Tailwind -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Appliquer Tailwind CSS aux champs de formulaire
+        const textInputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="date"], input[type="number"], select');
+        textInputs.forEach(input => {
+            input.classList.add('w-full', 'px-3', 'py-2', 'border', 'border-gray-300', 'rounded-md', 'shadow-sm', 'focus:outline-none', 'focus:ring-2', 'focus:ring-orange-custom', 'focus:border-orange-custom');
+        });
+        
+        // Style spécifique pour les textareas
+        const textareas = document.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+            textarea.classList.add('w-full', 'px-3', 'py-2', 'border', 'border-gray-300', 'rounded-md', 'shadow-sm', 'focus:outline-none', 'focus:ring-2', 'focus:ring-orange-custom', 'focus:border-orange-custom', 'h-32');
+        });
+
+        // 🔹 JavaScript pour Calculs Automatiques
+        function updateTotalsAndAverages() {
+            let connaissances = parseFloat(document.getElementById("id_connaissances").value) || 0;
+            let initiative = parseFloat(document.getElementById("id_initiative").value) || 0;
+            let rendement = parseFloat(document.getElementById("id_rendement").value) || 0;
+            let respect_objectifs = parseFloat(document.getElementById("id_respect_objectifs").value) || 0;
+
+            let total_rendement = connaissances + initiative + rendement + respect_objectifs;
+            let moyenne_rendement = total_rendement / 4;
+
+            document.getElementById("total_notes").innerText = total_rendement.toFixed(2);
+            document.getElementById("moyenne_m1").innerText = moyenne_rendement.toFixed(2);
+
+            let civisme = parseFloat(document.getElementById("id_civisme").value) || 0;
+            let service_public = parseFloat(document.getElementById("id_service_public").value) || 0;
+            let relations_humaines = parseFloat(document.getElementById("id_relations_humaines").value) || 0;
+            let discipline = parseFloat(document.getElementById("id_discipline").value) || 0;
+            let ponctualité = parseFloat(document.getElementById("id_ponctualité").value) || 0;
+            let assiduite = parseFloat(document.getElementById("id_assiduite").value) || 0;
+            let tenue = parseFloat(document.getElementById("id_tenue").value) || 0;
+
+            let total_comportement = civisme + service_public + relations_humaines + discipline + ponctualité + assiduite + tenue;
+            let moyenne_comportement = total_comportement / 7;
+
+            document.getElementById("total_comportement").innerText = total_comportement.toFixed(2);
+            document.getElementById("moyenne_m2").innerText = moyenne_comportement.toFixed(2);
+        }
+
+        document.querySelectorAll("input").forEach(input => {
+            input.addEventListener("input", updateTotalsAndAverages);
+        });
+
+        // Calcul initial
+        updateTotalsAndAverages();
+    });
+</script>
+{% endblock %}

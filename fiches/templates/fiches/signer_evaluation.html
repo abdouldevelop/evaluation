@@ -1,0 +1,21 @@
+<!-- fiches/templates/fiches/signer_evaluation.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Signer Évaluation</title>
+</head>
+<body>
+    <h1>Signer l'Évaluation</h1>
+    <p>Votre signature actuelle :</p>
+    {% if request.user.userprofile.signature %}
+        <img src="{{ request.user.userprofile.signature.url }}" alt="Signature" style="max-width: 150px;">
+    {% else %}
+        <p>Aucune signature enregistrée. Veuillez en ajouter une dans votre profil.</p>
+    {% endif %}
+    <form method="POST">
+        {% csrf_token %}
+        <button type="submit">Confirmer la Signature</button>
+    </form>
+</body>
+</html>

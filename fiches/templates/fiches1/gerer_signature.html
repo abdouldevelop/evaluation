@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modifier Profil Directeur</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .preview-container {
+            max-width: 200px;
+            max-height: 100px;
+            overflow: hidden;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        .preview-container img {
+            object-fit: contain;
+            width: 100%;
+            height: 100%;
+        }
+        .error-message {
+            display: none;
+            color: #dc2626;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">Modifier Votre Profil</h1>
+        <form method="POST" enctype="multipart/form-data" id="profileForm" class="space-y-6">
+            {% csrf_token %}
+            <div>
+                <label for="signature" class="block text-sm font-medium text-gray-700 mb-2">
+                    Téléchargez votre signature (image)
+                </label>
+                <input
+                    type="file"
+                    name="signature"
+                    id="signature"
+                    accept="image/png,image/jpeg,image/gif"
+                    required
+                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                >
+                <p class="error-message mt-1" id="fileError">Veuillez sélectionner une image valide (PNG, JPEG, GIF).</p>
+            </div>
+            {% if profile.signature %}
+                <div>
+                    <p class="text-sm font-medium text-gray-700 mb-2">Signature actuelle :</p>
+                    <div class="preview-container">
+                        <img src="{{ profile.signature.url }}" alt="Signature actuelle" id="currentSignature">
+                    </div>
+                </div>
+            {% endif %}
+            <div>
+                <label for="signaturePreview" class="block text-sm font-medium text-gray-700 mb-2">
+                    Aperçu de la nouvelle signature :
+                </label>
+                <div class="preview-container">
+                    <img id="signaturePreview" alt="Aperçu de la signature" class="hidden">
+                </div>
+            </div>
+            <div class="flex space-x-4">
+                <button
+                    type="button"
+                    onclick="history.back()"
+                    class="w-1/2 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:ring-offset-2 transition duration-200"
+                >
+                    Retour
+                </button>
+                <button
+                    type="submit"
+                    class="w-1/2 bg-green-900 text-white py-2 px-4 rounded-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:ring-offset-2 transition duration-200"
+                >
+                    Enregistrer
+                </button>
+            </div>
+        </form>
+    </div>
+    <script>
+        const input = document.getElementById('signature');
+        const preview = document.getElementById('signaturePreview');
+        const fileError = document.getElementById('fileError');
+        const form = document.getElementById('profileForm');
+
+        input.addEventListener('change', function() {
+            const file = this.files[0];
+            fileError.style.display = 'none';
+            preview.classList.add('hidden');
+
+            if (file) {
+                const validTypes = ['image/png', 'image/jpeg', 'image/gif'];
+                if (!validTypes.includes(file.type)) {
+                    fileError.style.display = 'block';
+                    this.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        form.addEventListener('submit', function(e) {
+            if (!input.files[0]) {
+                e.preventDefault();
+                fileError.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

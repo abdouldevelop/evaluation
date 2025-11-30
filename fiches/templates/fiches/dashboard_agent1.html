@@ -1,0 +1,317 @@
+{% extends 'fiches/base.html' %}
+{% load evaluation_filters %}
+
+{% block title %}
+Tableau de Bord - {% if type_personnel == 'responsable' %}Responsable{% else %}Agent{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="order-1 sm:order-2 flex space-x-4">
+    <a href="{% url 'modifier_mot_de_passe' %}" class="px-4 py-2 bg-green-900 text-white rounded-lg shadow-md hover:bg-gray-600 transition-all duration-300 flex items-center justify-center hover:bg-orange-600 transition-colors duration-150r">
+        <span class="mr-2">🔐</span> Modifier mon mot de passe
+    </a>
+    <a href="{% url 'gerer_signature' %}" class="px-4 py-2 bg-green-900 text-white rounded-lg shadow-md hover:bg-green-900 transition-all duration-300 flex items-center justify-center hover:bg-orange-600 transition-colors duration-150r">
+        <span class="mr-2">✍️</span> Gérer ma signature
+    </a>
+
+</div>
+<div class="max-w-7xl mx-auto">
+    <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">
+        📋 Tableau de Bord {% if type_personnel == 'responsable' %}du Responsable{% else %}de l’Agent{% endif %}
+    </h2>
+
+    <!-- 🔹 Informations de l'Agent -->
+    <div id="agentInfo" class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+        <div class="bg-green-custom text-white text-center py-4">
+            <h3 class="text-xl font-semibold">Identification {% if type_personnel == 'responsable' %}du Responsable{% else %}de l'Agent{% endif %}</h3>
+        </div>
+        <div class="p-6">
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse">
+                    <tbody>
+                        <tr class="border-b border-gray-200">
+                            <td class="py-3 px-4 bg-gray-50 font-medium">Nom et Prénoms :</td>
+                            <td class="py-3 px-4">{{ agent.nom }} {{ agent.prenoms }}</td>
+                        </tr>
+                        <tr class="border-b border-gray-200">
+                            <td class="py-3 px-4 bg-gray-50 font-medium">Matricule :</td>
+                            <td class="py-3 px-4">{{ agent.matricule }}</td>
+                        </tr>
+                        <tr class="border-b border-gray-200">
+                            <td class="py-3 px-4 bg-gray-50 font-medium">Date d'embauche :</td>
+                            <td class="py-3 px-4">{{ agent.date_embauche|date:"d/m/Y" }}</td>
+                        </tr>
+                        <tr class="border-b border-gray-200">
+                            <td class="py-3 px-4 bg-gray-50 font-medium">Catégorie :</td>
+                            <td class="py-3 px-4">{{ agent.categorie|default:"-" }}</td>
+                        </tr>
+                        <tr class="border-b border-gray-200">
+                            <td class="py-3 px-4 bg-gray-50 font-medium">Direction :</td>
+                            <td class="py-3 px-4">{{ agent.direction.nom }}</td>
+                        </tr>
+                        <tr class="border-b border-gray-200">
+                            <td class="py-3 px-4 bg-gray-50 font-medium">Poste :</td>
+                            <td class="py-3 px-4">{{ agent.poste|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-4 bg-gray-50 font-medium">Tenu Depuis :</td>
+                            <td class="py-3 px-4">{{ agent.tenu_depuis|date:"d/m/Y"|default:"-" }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔹 Résultats de l'Évaluation -->
+    <div id="evaluationInfo" class="bg-green-custom text-white text-center py-4">
+            <h3 class="text-xl font-semibold">📋 Vos Évaluations</h3>
+        </div>
+        <div class="p-6">
+            {% if evaluations %}
+                {% for evaluation in evaluations %}
+                    <h4 class="text-xl font-semibold text-center text-green-custom mb-6">
+                        📌 Évaluation {{ evaluation.annee }} - {{ evaluation.get_semestre_display }}
+                    </h4>
+                    <!-- 🔹 Notes de Rendement (M1) -->
+                    <div class="mb-8">
+                        <h5 class="text-lg font-medium text-orange-custom mb-3 border-b border-gray-200 pb-2">
+                            🔹 Catégorie : Rendement
+                        </h5>
+                        <div class="overflow-x-auto">
+                            <table class="w-full border-collapse">
+                                <tbody>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium">Connaissances et aptitudes professionnelles :</td>
+                                        <td class="py-3 px-4">{{ evaluation.connaissances }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium">Esprit d’initiative :</td>
+                                        <td class="py-3 px-4">{{ evaluation.initiative }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium">Puissance du travail et rendement :</td>
+                                        <td class="py-3 px-4">{{ evaluation.rendement }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium">Respect des Objectifs :</td>
+                                        <td class="py-3 px-4">{{ evaluation.respect_objectifs }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200 bg-gray-100">
+                                        <td class="py-3 px-4 font-medium">Total Notes :</td>
+                                        <td class="py-3 px-4 font-medium">{{ evaluation.connaissances|add:evaluation.initiative|add:evaluation.rendement|add:evaluation.respect_objectifs }}</td>
+                                    </tr>
+                                    <tr class="bg-green-custom/10">
+                                        <td class="py-3 px-4 font-semibold">Moyenne Rendement (M1) :</td>
+                                        <td class="py-3 px-4 font-semibold text-green-custom">{{ evaluation.moyenne_rendement|floatformat:3 }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 🔹 Notes de Comportement (M2) -->
+                    <div class="mb-8">
+                        <h5 class="text-lg font-medium text-orange-custom mb-3 border-b border-gray-200 pb-2">
+                            🔹 Catégorie : Comportement
+                        </h5>
+                        <div class="overflow-x-auto">
+                            <table class="w-full border-collapse">
+                                <tbody>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium">Civisme, intégrité et moralité :</td>
+                                        <td class="py-3 px-4">{{ evaluation.civisme }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium">Sens du service public :</td>
+                                        <td class="py-3 px-4">{{ evaluation.service_public }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium">Sens social et sens des relations humaines (Esprit d’équipe) :</td>
+                                        <td class="py-3 px-4">{{ evaluation.relations_humaines }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium">Esprit de discipline :</td>
+                                        <td class="py-3 px-4">{{ evaluation.discipline }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium">Ponctualité :</td>
+                                        <td class="py-3 px-4">{{ evaluation.ponctualite }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium">Assiduité :</td>
+                                        <td class="py-3 px-4">{{ evaluation.assiduite }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium">Tenue vestimentaire et présentation :</td>
+                                        <td class="py-3 px-4">{{ evaluation.tenue }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200 bg-gray-100">
+                                        <td class="py-3 px-4 font-medium">Total Notes :</td>
+                                        <td class="py-3 px-4 font-medium">{{ evaluation.civisme|add:evaluation.service_public|add:evaluation.relations_humaines|add:evaluation.discipline|add:evaluation.ponctualite|add:evaluation.assiduite|add:evaluation.tenue }}</td>
+                                    </tr>
+                                    <tr class="bg-green-custom/10">
+                                        <td class="py-3 px-4 font-semibold">Moyenne Comportement (M2) :</td>
+                                        <td class="py-3 px-4 font-semibold text-green-custom">{{ evaluation.moyenne_comportement|floatformat:3 }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 🔹 Notes de Management (M3) - Uniquement pour les responsables -->
+                    {% if type_personnel == 'responsable' %}
+                    <div class="mb-8">
+                        <h5 class="text-lg font-medium text-orange-custom mb-3 border-b border-gray-200 pb-2">
+                            🔹 Catégorie : Management
+                        </h5>
+                        <div class="overflow-x-auto">
+                            <table class="w-full border-collapse">
+                                <tbody>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium">Leadership :</td>
+                                        <td class="py-3 px-4">{{ evaluation.leadership }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium">Planification des activités :</td>
+                                        <td class="py-3 px-4">{{ evaluation.planification }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium">Prise de Décision :</td>
+                                        <td class="py-3 px-4">{{ evaluation.prise_decision }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium">Résolution de Problèmes :</td>
+                                        <td class="py-3 px-4">{{ evaluation.resolution_problemes }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium">Travail d’Équipe :</td>
+                                        <td class="py-3 px-4">{{ evaluation.travail_equipe }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200 bg-gray-100">
+                                        <td class="py-3 px-4 font-medium">Total Notes :</td>
+                                        <td class="py-3 px-4 font-medium">{{ evaluation.leadership|add:evaluation.planification|add:evaluation.prise_decision|add:evaluation.resolution_problemes|add:evaluation.travail_equipe }}</td>
+                                    </tr>
+                                    <tr class="bg-green-custom/10">
+                                        <td class="py-3 px-4 font-semibold">Moyenne Management (M3) :</td>
+                                        <td class="py-3 px-4 font-semibold text-green-custom">{{ evaluation.moyenne_management|floatformat:3 }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- 🔹 Note Finale -->
+                    <div class="mb-8">
+                        <h5 class="text-lg font-medium text-orange-custom mb-3 border-b border-gray-200 pb-2">
+                            🔹 Note Finale
+                        </h5>
+                        <div class="overflow-x-auto">
+                            <table class="w-full border-collapse">
+                                <tbody>
+                                    <tr class="border-b border-gray-200 bg-gray-100">
+                                        <td class="py-3 px-4 font-medium">Moyenne Pondérée (MP1) - Rendement :</td>
+                                        <td class="py-3 px-4 font-medium">
+                                            {% load evaluation_filters %}
+                                            {{ evaluation.moyenne_rendement|multiply:2|floatformat:3 }} / 10
+                                        </td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200 bg-gray-100">
+                                        <td class="py-3 px-4 font-medium">Moyenne Pondérée (MP2) - Comportement :</td>
+                                        <td class="py-3 px-4 font-medium">{% load evaluation_filters %}
+                                            {{ evaluation.moyenne_comportement|floatformat:3 }} / 5</td>
+                                    </tr>
+                                    {% if type_personnel == 'responsable' %}
+                                    <tr class="border-b border-gray-200 bg-gray-100">
+                                        <td class="py-3 px-4 font-medium">Moyenne Pondérée (MP3) - Management :</td>
+                                        <td class="py-3 px-4 font-medium">{% load evaluation_filters %}
+                                            {{ evaluation.moyenne_management|multiply:2|floatformat:3 }} / 10</td>
+                                    </tr>
+                                    {% endif %}
+                                    <tr class="bg-green-custom/20">
+                                        <td class="py-3 px-4 font-semibold">Moyenne Générale :</td>
+                                        <td class="py-3 px-4 font-medium">{{ evaluation.moyenne_generale|floatformat:3 }} / 5</td>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 🔹 Avis du Directeur -->
+                    <div class="bg-gray-50 p-4 rounded-lg mb-8 border border-gray-200">
+                        <h5 class="font-medium mb-2">Avis du Directeur :</h5>
+                        <p class="italic">{{ evaluation.avis_directeur|default:"Aucun avis" }}</p>
+                    </div>
+
+                    <!-- 🔹 Actions : Signature + Avis -->
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 mb-4">
+                        <div>
+                            {% if evaluation.est_signe_agent %}
+                                <span class="text-green-700 font-semibold">✅ Vous avez signé cette évaluation</span>
+                            {% else %}
+                                <a href="{% url 'signer_evaluation_agent' evaluation.id %}" class="inline-block px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800">✍️ Signer l’évaluation</a>
+                            {% endif %}
+                        </div>
+                        <div>
+                            {% if not evaluation.est_signe_directeur %}
+                                <a href="{% url 'ajouter_avis_agent' evaluation.id %}" class="inline-block px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700">
+                                    {% if evaluation.avis_agent %}📝 Modifier votre Avis{% else %}💬 Donner un Avis{% endif %}
+                                </a>
+                            {% else %}
+                                <span class="text-blue-600">L’évaluation est verrouillée (déjà signée par le directeur).</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {# ATTENTION: appelle une méthode sans arguments — OK si ton template le permet #}
+                    {% with u=evaluation.agent.utilisateur %}
+                        {% if u and u.is_directeur %}
+                            {# Si la personne évaluée est un Directeur -> exiger signature DG #}
+                            {% if evaluation.est_signe_dg %}
+                                <div class="text-center mt-4">
+                                    <a href="{% url 'generer_fiche_evaluation_pdf' evaluation.id %}" class="px-6 py-3 bg-green-custom text-white rounded-lg hover:bg-green-custom/90 transition flex items-center justify-center mx-auto">
+                                        📄 Télécharger la fiche signée
+                                    </a>
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            {# Autres (agents & responsables non-directeurs) -> signature Directeur suffit #}
+                            {% if evaluation.est_signe_directeur %}
+                                <div class="text-center mt-4">
+                                    <a href="{% url 'generer_fiche_evaluation_pdf' evaluation.id %}" class="px-6 py-3 bg-green-custom text-white rounded-lg hover:bg-green-custom/90 transition flex items-center justify-center mx-auto">
+                                        📄 Télécharger la fiche signée
+                                    </a>
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    {% endwith %}
+
+                </div>
+                {% endfor %}
+                {% else %}
+                    <div class="text-center py-10">
+                        <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <p class="text-xl text-gray-500">Vous n'avez encore aucune évaluation.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+<!-- Scripts de style pour les champs Django avec Tailwind -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const textInputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="date"], input[type="password"], input[type="number"], input[type="file"], textarea, select');
+        textInputs.forEach(input => {
+            input.classList.add('w-full', 'px-3', 'py-2', 'border', 'border-gray-300', 'rounded-md', 'shadow-sm', 'focus:outline-none', 'focus:ring-2', 'focus:ring-orange-custom', 'focus:border-orange-custom');
+            if (input.tagName.toLowerCase() === 'textarea') {
+                input.classList.add('h-32');
+            }
+        });
+    });
+</script>
+

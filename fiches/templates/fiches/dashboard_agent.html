@@ -1,0 +1,949 @@
+{% extends 'fiches/base.html' %}
+{% load static %}
+{% load evaluation_filters %}
+
+{% block title %}
+Tableau de Bord - {% if type_personnel == 'responsable' %}Responsable{% else %}Agent{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ========================================
+       🎨 VARIABLES CSS - CHARTE GRAPHIQUE
+       ======================================== */
+    :root {
+        --primary: #4c6559;
+        --primary-dark: #3a4f44;
+        --primary-light: #7a9882;
+        --secondary: #eea12e;
+        --secondary-dark: #d89125;
+        --secondary-light: #f5b858;
+    }
+
+    /* ========================================
+       ✨ ANIMATIONS KEYFRAMES
+       ======================================== */
+    
+    /* Animation d'apparition en fondu */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Animation de glissement depuis la gauche */
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    /* Animation de glissement depuis la droite */
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    /* Animation de scale */
+    @keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    /* Animation de pulsation pour les badges */
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+    }
+
+    /* ========================================
+       🎯 CLASSES D'ANIMATION
+       ======================================== */
+    .animate-fadeIn {
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    .animate-slideInLeft {
+        animation: slideInLeft 0.5s ease-out;
+    }
+
+    .animate-slideInRight {
+        animation: slideInRight 0.5s ease-out;
+    }
+
+    .animate-scaleIn {
+        animation: scaleIn 0.4s ease-out;
+    }
+
+    .animate-pulse-slow {
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    /* Animation progressive (stagger effect) */
+    .stagger-item {
+        opacity: 0;
+        animation: fadeIn 0.5s ease-out forwards;
+    }
+
+    .stagger-item:nth-child(1) { animation-delay: 0.1s; }
+    .stagger-item:nth-child(2) { animation-delay: 0.2s; }
+    .stagger-item:nth-child(3) { animation-delay: 0.3s; }
+    .stagger-item:nth-child(4) { animation-delay: 0.4s; }
+    .stagger-item:nth-child(5) { animation-delay: 0.5s; }
+    .stagger-item:nth-child(6) { animation-delay: 0.6s; }
+    .stagger-item:nth-child(7) { animation-delay: 0.7s; }
+
+    /* ========================================
+       🎨 EFFETS HOVER & TRANSITIONS
+       ======================================== */
+    
+    /* Hover sur les lignes de tableau */
+    .table-row-hover {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+    }
+
+    .table-row-hover:hover {
+        background: linear-gradient(to right, rgba(238, 161, 46, 0.08), transparent);
+        transform: translateX(4px);
+        box-shadow: -4px 0 0 0 var(--secondary);
+    }
+
+    /* Hover sur les cartes */
+    .card-hover {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .card-hover:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(76, 101, 89, 0.15);
+    }
+
+    /* Hover sur les boutons */
+    .btn-hover {
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-hover::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+
+    .btn-hover:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+
+    .btn-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(76, 101, 89, 0.2);
+    }
+
+    /* Hover sur les onglets */
+    .tab-hover {
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .tab-hover::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: var(--secondary);
+        transition: width 0.3s ease;
+    }
+
+    .tab-hover:hover::after {
+        width: 100%;
+    }
+
+    /* ========================================
+       🎨 COMPOSANTS PERSONNALISÉS
+       ======================================== */
+
+    /* Gradient background personnalisé */
+    .bg-gradient-custom {
+        background: linear-gradient(135deg, #f8faf9 0%, #ffffff 50%, #f0f5f2 100%);
+    }
+
+    /* Badge avec animation */
+    .badge-animated {
+        transition: all 0.3s ease;
+    }
+
+    .badge-animated:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(238, 161, 46, 0.3);
+    }
+
+    /* Scrollbar personnalisée */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: var(--primary);
+        border-radius: 10px;
+        transition: background 0.3s ease;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: var(--primary-dark);
+    }
+
+    /* Modal backdrop blur */
+    .modal-backdrop {
+        backdrop-filter: blur(8px);
+        background: rgba(0, 0, 0, 0.5);
+        transition: all 0.3s ease;
+    }
+
+    /* Card avec glassmorphism */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    /* ========================================
+       📱 RESPONSIVE UTILITIES
+       ======================================== */
+    @media (max-width: 640px) {
+        .table-row-hover:hover {
+            transform: translateX(2px);
+        }
+    }
+
+    /* ========================================
+       🎨 STYLE DES TABLEAUX
+       ======================================== */
+    table {
+        @apply min-w-full divide-y divide-gray-200;
+    }
+
+    th, td {
+        @apply whitespace-nowrap;
+    }
+
+    th {
+        @apply text-sm font-semibold tracking-wider;
+    }
+
+    td {
+        @apply text-sm text-gray-700;
+    }
+
+    /* Amélioration du style des cellules */
+    tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    /* ========================================
+       🔧 UTILITAIRES
+       ======================================== */
+    .transition-smooth {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .shadow-glow {
+        box-shadow: 0 0 20px rgba(238, 161, 46, 0.3);
+    }
+
+    .shadow-glow-primary {
+        box-shadow: 0 0 20px rgba(76, 101, 89, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- 🎨 Container principal avec gradient personnalisé -->
+<div class="min-h-screen bg-gradient-custom py-8 animate-fadeIn">
+    <div class="max-w-7xl mx-auto px-4">
+        <!-- 🎯 En-tête avec Boutons -->
+        <div class="flex flex-col sm:flex-row items-center justify-between mb-10 animate-slideInLeft">
+            <div class="order-2 sm:order-1 text-center sm:text-left mt-4 sm:mt-0">
+                <!-- Titre avec gradient -->
+                <h2 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[#4c6559] to-[#3a4f44] bg-clip-text text-transparent">
+                    Tableau de Bord {% if type_personnel == 'responsable' %}du Responsable{% else %}de l'Agent{% endif %}
+                </h2>
+                <p class="text-gray-600 mt-2 text-lg">Bienvenue, {{ agent.nom }} {{ agent.prenoms }}</p>
+            </div>
+        </div>
+
+        <!-- 📋 Informations de l'Agent -->
+        <div id="agentInfo" class="glass-card rounded-2xl shadow-xl mb-8 card-hover animate-scaleIn">
+            <!-- En-tête avec gradient primaire -->
+            <div class="bg-gradient-to-r from-[#4c6559] to-[#3a4f44] text-white text-center py-4 rounded-t-2xl">
+                <h3 class="text-xl font-semibold flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                    Identification {% if type_personnel == 'responsable' %}du Responsable{% else %}de l'Agent{% endif %}
+                </h3>
+            </div>
+            <!-- Contenu avec scrollbar personnalisée -->
+            <div class="p-6">
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full border-collapse">
+                        <tbody>
+                            <!-- Lignes avec hover effect personnalisé et animation stagger -->
+                            <tr class="border-b border-gray-200 table-row-hover stagger-item">
+                                <td class="py-3 px-4 bg-gray-50 font-medium text-gray-700">Nom et Prénoms :</td>
+                                <td class="py-3 px-4">{{ agent.nom }} {{ agent.prenoms }}</td>
+                            </tr>
+                            <tr class="border-b border-gray-200 table-row-hover stagger-item">
+                                <td class="py-3 px-4 bg-gray-50 font-medium text-gray-700">Matricule :</td>
+                                <td class="py-3 px-4">{{ agent.matricule }}</td>
+                            </tr>
+                            <tr class="border-b border-gray-200 table-row-hover stagger-item">
+                                <td class="py-3 px-4 bg-gray-50 font-medium text-gray-700">Date d'embauche :</td>
+                                <td class="py-3 px-4">{{ agent.date_embauche|date:"d/m/Y"|default:"-" }}</td>
+                            </tr>
+                            <tr class="border-b border-gray-200 table-row-hover stagger-item">
+                                <td class="py-3 px-4 bg-gray-50 font-medium text-gray-700">Catégorie :</td>
+                                <td class="py-3 px-4">{{ agent.categorie|default:"-" }}</td>
+                            </tr>
+                            <!-- ✅ Ligne 86 CORRIGÉE -->
+                            <tr class="border-b border-gray-200 table-row-hover stagger-item">
+                                <td class="py-3 px-4 bg-gray-50 font-medium text-gray-700">Direction :</td>
+                                <td class="py-3 px-4">{{ agent.direction.nom }}</td>
+                            </tr>
+                            <tr class="border-b border-gray-200 table-row-hover stagger-item">
+                                <td class="py-3 px-4 bg-gray-50 font-medium text-gray-700">Poste :</td>
+                                <td class="py-3 px-4">{{ agent.poste|default:"-" }}</td>
+                            </tr>
+                            <tr class="table-row-hover stagger-item">
+                                <td class="py-3 px-4 bg-gray-50 font-medium text-gray-700">Tenu Depuis :</td>
+                                <td class="py-3 px-4">{{ agent.tenu_depuis|date:"d/m/Y"|default:"-" }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 📊 Résultats de l'Évaluation -->
+        <div class="glass-card rounded-2xl shadow-xl mb-8 card-hover animate-slideInRight">
+            <!-- En-tête avec gradient primaire et bouton historique -->
+            <div class="bg-gradient-to-r from-[#4c6559] to-[#3a4f44] text-white py-4 px-6 flex justify-between items-center rounded-t-2xl">
+                <h3 class="text-xl font-semibold flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Vos Évaluations - Année {{ annee_courante }}
+                </h3>
+                <!-- Bouton historique harmonisé -->
+                <button onclick="toggleHistorique()" class="btn-hover flex items-center justify-center px-4 py-2 bg-white text-[#4c6559] rounded-lg shadow-md hover:bg-[#f0f5f2] transition-smooth">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Historique
+                </button>
+            </div>
+
+            {% if evaluations %}
+                <!-- 📑 Navigation des onglets (Semestre 1 et 2) -->
+                <div class="border-b border-gray-200">
+                    <nav class="flex flex-wrap -mb-px">
+                        {% for eval in evaluations %}
+                            <button
+                                onclick="switchEvaluation('eval-{{ eval.id }}')"
+                                id="tab-eval-{{ eval.id }}"
+                                class="eval-tab tab-hover w-full sm:w-1/2 py-4 px-6 text-center border-b-2 font-semibold text-gray-600 focus:outline-none transition-smooth {% if forloop.first %}border-[#eea12e] text-[#eea12e] bg-gradient-to-r from-[#eea12e]/10 to-transparent{% else %}border-transparent hover:border-[#eea12e] hover:text-[#eea12e]{% endif %}"
+                                data-eval-id="eval-{{ eval.id }}">
+                                <span class="flex items-center justify-center">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    {{ eval.get_semestre_display }}
+                                </span>
+                            </button>
+                        {% endfor %}
+                    </nav>
+                </div>
+
+                <!-- 📄 Contenu des évaluations -->
+                {% for evaluation in evaluations %}
+                <div id="eval-{{ evaluation.id }}" class="eval-content p-6 {% if not forloop.first %}hidden{% endif %} animate-fadeIn custom-scrollbar">
+                    <!-- Titre de l'évaluation -->
+                    <h4 class="text-xl font-semibold text-center text-gray-800 mb-6 flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2 text-[#eea12e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Évaluation {{ evaluation.get_semestre_display }} {{ evaluation.annee }}
+                    </h4>
+
+                    <!-- 📈 Notes de Rendement (M1) -->
+                    <div class="mb-8">
+                        <h5 class="text-lg font-semibold text-[#eea12e] mb-3 border-b border-gray-200 pb-2 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2V9"></path>
+                            </svg>
+                            Catégorie : Rendement
+                        </h5>
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full border-collapse">
+                                <tbody>
+                                    <tr class="border-b border-gray-200 table-row-hover">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium text-gray-700">Connaissances et aptitudes professionnelles :</td>
+                                        <td class="py-3 px-4">{{ evaluation.connaissances|default:"-" }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200 table-row-hover">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium text-gray-700">Esprit d'initiative :</td>
+                                        <td class="py-3 px-4">{{ evaluation.initiative|default:"-" }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200 table-row-hover">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium text-gray-700">Puissance du travail et rendement :</td>
+                                        <td class="py-3 px-4">{{ evaluation.rendement|default:"-" }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200 table-row-hover">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium text-gray-700">Respect des Objectifs :</td>
+                                        <td class="py-3 px-4">{{ evaluation.respect_objectifs|default:"-" }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200 bg-gray-100">
+                                        <td class="py-3 px-4 font-medium text-gray-700">Total Notes :</td>
+                                        <td class="py-3 px-4 font-medium">{{ evaluation.connaissances|add:evaluation.initiative|add:evaluation.rendement|add:evaluation.respect_objectifs|default:"-" }}</td>
+                                    </tr>
+                                    <tr class="bg-green-100">
+                                        <td class="py-3 px-4 font-semibold text-gray-800">Moyenne Rendement (M1) :</td>
+                                        <td class="py-3 px-4 font-semibold text-green-800">{{ evaluation.moyenne_rendement|floatformat:2|default:"-" }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 🤝 Notes de Comportement (M2) -->
+                    <div class="mb-8">
+                        <h5 class="text-lg font-semibold text-[#eea12e] mb-3 border-b border-gray-200 pb-2 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                            </svg>
+                            Catégorie : Comportement
+                        </h5>
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full border-collapse">
+                                <tbody>
+                                    <tr class="border-b border-gray-200 table-row-hover">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium text-gray-700">Civisme, intégrité et moralité :</td>
+                                        <td class="py-3 px-4">{{ evaluation.civisme|default:"-" }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200 table-row-hover">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium text-gray-700">Sens du service public :</td>
+                                        <td class="py-3 px-4">{{ evaluation.service_public|default:"-" }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200 table-row-hover">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium text-gray-700">Sens social et relations humaines :</td>
+                                        <td class="py-3 px-4">{{ evaluation.relations_humaines|default:"-" }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200 table-row-hover">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium text-gray-700">Esprit de discipline :</td>
+                                        <td class="py-3 px-4">{{ evaluation.discipline|default:"-" }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200 table-row-hover">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium text-gray-700">Ponctualité :</td>
+                                        <td class="py-3 px-4">{{ evaluation.ponctualite|default:"-" }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200 table-row-hover">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium text-gray-700">Assiduité :</td>
+                                        <td class="py-3 px-4">{{ evaluation.assiduite|default:"-" }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200 table-row-hover">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium text-gray-700">Tenue vestimentaire et présentation :</td>
+                                        <td class="py-3 px-4">{{ evaluation.tenue|default:"-" }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200 bg-gray-100">
+                                        <td class="py-3 px-4 font-medium text-gray-700">Total Notes :</td>
+                                        <td class="py-3 px-4 font-medium">{{ evaluation.civisme|add:evaluation.service_public|add:evaluation.relations_humaines|add:evaluation.discipline|add:evaluation.ponctualite|add:evaluation.assiduite|add:evaluation.tenue|default:"-" }}</td>
+                                    </tr>
+                                    <tr class="bg-green-100">
+                                        <td class="py-3 px-4 font-semibold text-gray-800">Moyenne Comportement (M2) :</td>
+                                        <td class="py-3 px-4 font-semibold text-green-800">{{ evaluation.moyenne_comportement|floatformat:2|default:"-" }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 🌟 Notes de Management (M3) - Pour Responsables uniquement -->
+                    {% if type_personnel == 'responsable' %}
+                    <div class="mb-8">
+                        <h5 class="text-lg font-semibold text-[#eea12e] mb-3 border-b border-gray-200 pb-2 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                            Catégorie : Management
+                        </h5>
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full border-collapse">
+                                <tbody>
+                                    <tr class="border-b border-gray-200 table-row-hover">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium text-gray-700">Leadership :</td>
+                                        <td class="py-3 px-4">{{ evaluation.leadership|default:"-" }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200 table-row-hover">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium text-gray-700">Planification des activités :</td>
+                                        <td class="py-3 px-4">{{ evaluation.planification|default:"-" }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200 table-row-hover">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium text-gray-700">Prise de Décision :</td>
+                                        <td class="py-3 px-4">{{ evaluation.prise_decision|default:"-" }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200 table-row-hover">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium text-gray-700">Résolution de Problèmes :</td>
+                                        <td class="py-3 px-4">{{ evaluation.resolution_problemes|default:"-" }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200 table-row-hover">
+                                        <td class="py-3 px-4 bg-gray-50 font-medium text-gray-700">Travail d'Équipe :</td>
+                                        <td class="py-3 px-4">{{ evaluation.travail_equipe|default:"-" }}</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200 bg-gray-100">
+                                        <td class="py-3 px-4 font-medium text-gray-700">Total Notes :</td>
+                                        <td class="py-3 px-4 font-medium">{{ evaluation.leadership|add:evaluation.planification|add:evaluation.prise_decision|add:evaluation.resolution_problemes|add:evaluation.travail_equipe|default:"-" }}</td>
+                                    </tr>
+                                    <tr class="bg-green-100">
+                                        <td class="py-3 px-4 font-semibold text-gray-800">Moyenne Management (M3) :</td>
+                                        <td class="py-3 px-4 font-semibold text-green-800">{{ evaluation.moyenne_management|floatformat:2|default:"-" }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- 🎯 Note Finale avec tableau récapitulatif -->
+                    <div class="mb-8">
+                        <h5 class="text-lg font-semibold text-[#eea12e] mb-3 border-b border-gray-200 pb-2 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Note Finale
+                        </h5>
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full border-collapse">
+                                <tbody>
+                                    <tr class="border-b border-gray-200 bg-gray-100">
+                                        <td class="py-3 px-4 font-medium text-gray-700">Moyenne Pondérée (MP1) - Rendement :</td>
+                                        <td class="py-3 px-4 font-medium">{{ evaluation.moyenne_rendement|multiply:2|floatformat:2|default:"-" }} / 10</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200 bg-gray-100">
+                                        <td class="py-3 px-4 font-medium text-gray-700">Moyenne Pondérée (MP2) - Comportement :</td>
+                                        <td class="py-3 px-4 font-medium">{{ evaluation.moyenne_comportement|floatformat:2|default:"-" }} / 5</td>
+                                    </tr>
+                                    {% if type_personnel == 'responsable' %}
+                                    <tr class="border-b border-gray-200 bg-gray-100">
+                                        <td class="py-3 px-4 font-medium text-gray-700">Moyenne Pondérée (MP3) - Management :</td>
+                                        <td class="py-3 px-4 font-medium">{{ evaluation.moyenne_management|multiply:2|floatformat:2|default:"-" }} / 10</td>
+                                    </tr>
+                                    {% endif %}
+                                    <tr class="bg-green-100">
+                                        <td class="py-3 px-4 font-semibold text-gray-800">Moyenne Générale :</td>
+                                        <td class="py-3 px-4 font-semibold text-green-800 text-lg">
+                                            <span class="inline-block py-1 px-3 rounded-full {% if evaluation.moyenne_generale >= 3 %}bg-green-100 text-green-800{% elif evaluation.moyenne_generale >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %} badge-animated">
+                                                {{ evaluation.moyenne_generale|floatformat:2|default:"-" }} / 5
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 📋 Avis du Directeur -->
+                    <div class="bg-gray-50 p-4 rounded-lg mb-8 border border-gray-200">
+                        <h5 class="font-medium text-gray-700 mb-2 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-[#eea12e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5v-4a2 2 0 012-2h10a2 2 0 012 2v4h-4M9 16l3 3m0 0l3-3m-3 3V7"></path>
+                            </svg>
+                            Avis du Directeur
+                        </h5>
+                        <p class="italic text-gray-600">{{ evaluation.avis_directeur|default:"Aucun avis" }}</p>
+                    </div>
+
+                    <!-- 🔐 Actions : Signature + Avis (Boutons harmonisés) -->
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 mb-4">
+                        <div>
+                            {% if evaluation.est_signe_agent %}
+                                <span class="inline-flex items-center py-1 px-3 rounded-full bg-green-100 text-green-800">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    Vous avez signé cette évaluation
+                                </span>
+                            {% else %}
+                                <!-- Bouton Primaire : Signer -->
+                                {% if evaluation.avis_agent %}
+                                    <a href="{% url 'signer_evaluation_agent' evaluation.id %}" class="btn-hover inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-[#4c6559] to-[#3a4f44] text-white rounded-lg hover:from-[#3a4f44] hover:to-[#4c6559] transition-smooth shadow-sm">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                                        </svg>
+                                        Signer l'évaluation
+                                    </a>
+                                {% else %}
+                                    <span class="inline-flex items-center justify-center px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed" title="Vous devez d'abord donner votre avis">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                                        </svg>
+                                        Signer l'évaluation
+                                    </span>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        <div>
+                            {% if not evaluation.est_signe_directeur %}
+                                <!-- Bouton Secondaire : Avis -->
+                                <a href="{% url 'ajouter_avis_agent' evaluation.id %}" class="btn-hover inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-[#eea12e] to-[#d89125] text-white rounded-lg hover:from-[#d89125] hover:to-[#eea12e] transition-smooth shadow-sm">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5v-4a2 2 0 012-2h10a2 2 0 012 2v4h-4M9 16l3 3m0 0l3-3m-3 3V7"></path>
+                                    </svg>
+                                    {% if evaluation.avis_agent %}Modifier votre Avis{% else %}Donner un Avis{% endif %}
+                                </a>
+                            {% else %}
+                                <span class="inline-flex items-center py-1 px-3 rounded-full bg-blue-100 text-blue-800">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    Évaluation verrouillée
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- 📄 Télécharger PDF si signé (Bouton bleu standard) -->
+                    {% with u=evaluation.agent.utilisateur %}
+                        {% if u and u.is_directeur or evaluation.est_signe_directeur %}
+                            <div class="text-center mt-4">
+                                <a href="{% url 'generer_fiche_evaluation_pdf' evaluation.id %}" class="btn-hover inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-smooth shadow-sm">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                    Télécharger la fiche signée
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <!-- 📭 État vide -->
+                <div class="p-12 text-center">
+                    <svg class="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <p class="text-xl text-gray-500">Vous n'avez encore aucune évaluation pour {{ annee_courante }}.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- 🔍 Modal Historique -->
+        <div id="historiqueModal" class="fixed inset-0 modal-backdrop z-50 hidden flex items-center justify-center">
+            <div class="glass-card rounded-2xl shadow-2xl max-w-5xl w-full mx-4 max-h-[90vh] overflow-hidden animate-scaleIn">
+                <!-- En-tête du modal -->
+                <div class="bg-gradient-to-r from-[#4c6559] to-[#3a4f44] text-white py-4 px-6 flex justify-between items-center rounded-t-2xl">
+                    <h3 class="text-xl font-semibold flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Historique des Évaluations
+                    </h3>
+                    <button onclick="toggleHistorique()" class="text-white hover:text-gray-200 transition-smooth">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Filtre par année -->
+                <div class="p-4 bg-gray-50 border-b border-gray-200">
+                    <label for="anneeHistorique" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-[#eea12e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        Sélectionner une année
+                    </label>
+                    <select id="anneeHistorique" onchange="filterHistoriqueByYear()" class="w-full md:w-64 px-4 py-3 border-2 border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559] text-gray-800 transition-smooth">
+                        <option value="">Toutes les années</option>
+                        {% for annee in annees_disponibles %}
+                            <option value="{{ annee }}">{{ annee }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Contenu de l'Historique -->
+                <div class="p-6 overflow-y-auto max-h-[calc(90vh-180px)] custom-scrollbar">
+                    {% if evaluations_historique %}
+                        {% regroup evaluations_historique by annee as evaluations_par_annee %}
+                        {% for annee_group in evaluations_par_annee %}
+                        <div class="annee-group mb-6" data-annee="{{ annee_group.grouper }}">
+                            <h4 class="text-lg font-semibold text-[#4c6559] mb-3 bg-gradient-to-r from-[#eea12e]/10 to-transparent p-3 rounded flex items-center">
+                                <svg class="w-5 h-5 mr-2 text-[#eea12e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                Année {{ annee_group.grouper }}
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {% for eval in annee_group.list %}
+                                <div class="border-2 border-gray-100 rounded-xl p-4 hover:shadow-md transition-smooth card-hover hover:border-[#eea12e]">
+                                    <div class="flex justify-between items-start mb-3">
+                                        <div>
+                                            <h5 class="font-semibold text-gray-800">{{ eval.get_semestre_display }}</h5>
+                                            <p class="text-sm text-gray-600">Année {{ eval.annee }}</p>
+                                        </div>
+                                        <span class="inline-block py-1 px-3 rounded-full text-sm font-semibold {% if eval.moyenne_generale >= 3 %}bg-green-100 text-green-800{% elif eval.moyenne_generale >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %} badge-animated">
+                                            {{ eval.moyenne_generale|floatformat:2 }} / 5
+                                        </span>
+                                    </div>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">M1 (Rendement) :</span>
+                                            <span class="font-medium text-[#4c6559]">{{ eval.moyenne_rendement|floatformat:2|default:"-" }}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">M2 (Comportement) :</span>
+                                            <span class="font-medium text-[#4c6559]">{{ eval.moyenne_comportement|floatformat:2|default:"-" }}</span>
+                                        </div>
+                                        {% if type_personnel == 'responsable' %}
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">M3 (Management) :</span>
+                                            <span class="font-medium text-[#4c6559]">{{ eval.moyenne_management|floatformat:2|default:"-" }}</span>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="mt-4 pt-3 border-t border-gray-200 flex justify-between items-center">
+                                        <div>
+                                            {% if eval.est_signe_directeur or eval.est_signe_dg %}
+                                                <span class="inline-flex items-center py-1 px-3 rounded-full bg-green-100 text-green-800 text-sm">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                    </svg>
+                                                    Signée
+                                                </span>
+                                            {% else %}
+                                                <span class="inline-flex items-center py-1 px-3 rounded-full bg-[#eea12e]/20 text-[#d89125] text-sm">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                    En cours
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            {% if eval.est_signe_directeur or eval.est_signe_dg %}
+                                                <!-- Bouton PDF bleu standard -->
+                                                <a href="{% url 'generer_fiche_evaluation_pdf' eval.id %}" class="inline-flex items-center justify-center px-3 py-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm rounded-lg hover:from-blue-600 hover:to-blue-700 transition-smooth shadow-sm btn-hover">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                    </svg>
+                                                    PDF
+                                                </a>
+                                            {% else %}
+                                                <span class="text-gray-400 text-sm">Non disponible</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-center text-gray-500 py-8">Aucun historique disponible.</p>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-center text-gray-500 py-8">Aucun historique disponible.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        /* ========================================
+           📑 GESTION DES ONGLETS D'ÉVALUATION
+           ======================================== */
+        
+        // Basculer entre les évaluations (semestres)
+        function switchEvaluation(evalId) {
+            // Cacher tous les contenus
+            document.querySelectorAll('.eval-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            // Retirer la classe active de tous les onglets
+            document.querySelectorAll('.eval-tab').forEach(tab => {
+                tab.classList.remove('border-[#eea12e]', 'text-[#eea12e]', 'bg-gradient-to-r', 'from-[#eea12e]/10', 'to-transparent');
+                tab.classList.add('border-transparent', 'text-gray-600');
+            });
+
+            // Afficher le contenu sélectionné avec animation
+            const content = document.getElementById(evalId);
+            if (content) {
+                content.classList.remove('hidden');
+                // Re-trigger animation
+                content.style.animation = 'none';
+                setTimeout(() => {
+                    content.style.animation = '';
+                }, 10);
+            }
+
+            // Ajouter la classe active à l'onglet sélectionné
+            const activeTab = document.getElementById('tab-' + evalId);
+            if (activeTab) {
+                activeTab.classList.add('border-[#eea12e]', 'text-[#eea12e]', 'bg-gradient-to-r', 'from-[#eea12e]/10', 'to-transparent');
+                activeTab.classList.remove('border-transparent', 'text-gray-600');
+            }
+        }
+
+        // Ajouter les écouteurs d'événements pour les onglets
+        document.querySelectorAll('.eval-tab').forEach(tab => {
+            tab.addEventListener('click', function () {
+                const evalId = this.getAttribute('data-eval-id');
+                switchEvaluation(evalId);
+            });
+        });
+
+        // Afficher le premier onglet par défaut
+        const firstTab = document.querySelector('.eval-tab');
+        if (firstTab) {
+            switchEvaluation(firstTab.getAttribute('data-eval-id'));
+        }
+
+        /* ========================================
+           🔍 GESTION DU MODAL HISTORIQUE
+           ======================================== */
+        
+        // Toggle modal historique
+        window.toggleHistorique = function() {
+            const modal = document.getElementById('historiqueModal');
+            if (modal) {
+                modal.classList.toggle('hidden');
+                // Désactiver le scroll du body quand le modal est ouvert
+                document.body.style.overflow = modal.classList.contains('hidden') ? '' : 'hidden';
+            }
+        }
+
+        // Filtrer l'historique par année
+        window.filterHistoriqueByYear = function() {
+            const selectedYear = document.getElementById('anneeHistorique').value;
+            document.querySelectorAll('.annee-group').forEach(group => {
+                const shouldHide = selectedYear !== '' && group.dataset.annee !== selectedYear;
+                group.classList.toggle('hidden', shouldHide);
+                
+                // Animation de transition
+                if (!shouldHide) {
+                    group.style.animation = 'fadeIn 0.5s ease-out';
+                }
+            });
+        }
+
+        // Fermer le modal en cliquant à l'extérieur
+        const modal = document.getElementById('historiqueModal');
+        if (modal) {
+            modal.addEventListener('click', function (e) {
+                if (e.target === this) {
+                    toggleHistorique();
+                }
+            });
+        }
+
+        // Fermer le modal avec la touche Échap
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('historiqueModal');
+                if (modal && !modal.classList.contains('hidden')) {
+                    toggleHistorique();
+                }
+            }
+        });
+
+        /* ========================================
+           🎨 STYLE DES INPUTS (CONSERVÉ)
+           ======================================== */
+        
+        const textInputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="date"], input[type="password"], input[type="number"], input[type="file"], textarea, select');
+        textInputs.forEach(input => {
+            input.classList.add('w-full', 'px-4', 'py-3', 'border-2', 'border-gray-200', 'rounded-xl', 'shadow-sm', 'focus:outline-none', 'focus:ring-2', 'focus:ring-[#4c6559]', 'focus:border-[#4c6559]', 'text-gray-800', 'transition-smooth');
+            if (input.tagName.toLowerCase() === 'textarea') {
+                input.classList.add('h-32');
+            }
+        });
+
+        /* ========================================
+           ✨ ANIMATIONS AU SCROLL (BONUS)
+           ======================================== */
+        
+        // Observer pour animer les éléments au scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observer les cartes pour l'animation au scroll
+        document.querySelectorAll('.card-hover').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(card);
+        });
+    });
+</script>
+{% endblock %}

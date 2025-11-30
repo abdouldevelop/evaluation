@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>FICHE D’ÉVALUATION DES AGENTS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        @page {
+            size: A4;
+            margin: 5mm 1mm 10mm 1mm; /* Marges latérales à 10mm */
+        }
+        body {
+            font-family: 'Montserrat', Arial, Helvetica, sans-serif;
+            font-size: 12pt;
+            line-height: 1.6;
+            color: #000;
+            margin: 0;
+        }
+        .container {
+            max-width: 190mm; /* Largeur utile augmentée à 190mm */
+            margin: 0 auto;
+            padding: 0;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header img {
+            width: 100%;
+            height: auto;
+            max-height: 150px; /* En-tête agrandi */
+        }
+        h1 {
+            font-size: 16pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-align: center;
+            margin: 15px 0;
+        }
+        h2 {
+            font-size: 14pt;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+        }
+        h3 {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        h4 {
+            font-size: 11pt;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-top: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            table-layout: fixed;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            font-size: 11pt;
+            overflow-wrap: break-word;
+            text-align: center;
+            vertical-align: middle;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        .signature img {
+            max-height: 2cm;
+            width: auto;
+        }
+        .bold { font-weight: bold; }
+        .italic { font-style: italic; }
+        .section {
+            margin-bottom: 20px;
+            padding-bottom: 20px; /* Espace pour éviter le chevauchement */
+        }
+        .page {
+            page-break-after: always;
+        }
+        .page:last-child {
+            page-break-after: auto;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 10px;
+            width: 100%;
+        }
+        .footer img {
+            width: 100%;
+            height: auto;
+            max-height: 100px; /* Pied de page agrandi */
+        }
+        .avis-section {
+            border: 1px solid black;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        .avis-text {
+            min-height: 50px;
+            border-bottom: 1px dashed black;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    {% load evaluation_filters %}
+    <div class="container">
+        <div class="header">
+            <img src="{{ entete_path }}" alt="ANStat Logo" style="width: 100%; height: auto;">
+        </div>
+        <h1>FICHE D’ÉVALUATION {% if evaluation.type_personnel == 'responsable' %}DES RESPONSABLES{% else %}DES AGENTS{% endif %}</h1>
+        <h1>ANNÉE {{ evaluation.annee }} (Semestre {{ evaluation.semestre }})</h1>
+
+        <div class="section">
+            <h2>I. IDENTIFICATION DU SALARIÉ</h2>
+            <p>(À renseigner par le Service du Personnel)</p>
+            <table style="table-layout: fixed;">
+                <colgroup>
+                    <col style="width: 60%;">
+                    <col style="width: 90%;">
+                </colgroup>
+                <tr>
+                    <td class="bold" style="text-align: left; padding: 10px;">Nom et Prénoms :</td>
+                    <td style="text-align: left; padding: 10px;">{{ agent.nom }} {{ agent.prenoms }}</td>
+                </tr>
+                <tr>
+                    <td class="bold" style="text-align: left; padding: 10px;">Matricule :</td>
+                    <td style="text-align: left; padding: 10px;">{{ agent.matricule }}</td>
+                </tr>
+                <tr>
+                    <td class="bold" style="text-align: left; padding: 10px;">Date d’embauche :</td>
+                    <td style="text-align: left; padding: 10px;">{{ agent.date_embauche|date:"d/m/Y" }}</td>
+                </tr>
+                <tr>
+                    <td class="bold" style="text-align: left; padding: 10px;">Catégorie :</td>
+                    <td style="text-align: left; padding: 10px;">{{ agent.categorie|default:"N/A" }}</td>
+                </tr>
+                <tr>
+                    <td class="bold" style="text-align: left; padding: 10px;">Direction :</td>
+                    <td style="text-align: left; padding: 10px;">{{ agent.direction.nom }}</td>
+                </tr>
+                <tr>
+                    <td class="bold" style="text-align: left; padding: 10px;">Sous-Direction :</td>
+                    <td style="text-align: left; padding: 10px;">{{ agent.sous_direction.nom|default:"N/A" }}</td>
+                </tr>
+                <tr>
+                    <td class="bold" style="text-align: left; padding: 10px;">Service :</td>
+                    <td style="text-align: left; padding: 10px;">{{ agent.service.nom|default:"N/A" }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>J. IDENTIFICATION DU POSTE DU SALARIÉ</h2>
+            <p>(À renseigner par le titulaire du poste)</p>
+            <table style="table-layout: fixed;">
+                <colgroup>
+                    <col style="width: 30%;">
+                    <col style="width: 70%;">
+                </colgroup>
+                <tr>
+                    <td class="bold" style="text-align: left; padding: 10px;">Poste :</td>
+                    <td style="text-align: left; padding: 10px;">{{ agent.poste|default:"N/A" }}</td>
+                </tr>
+                <tr>
+                    <td class="bold" style="text-align: left; padding: 10px;">Tenu depuis le :</td>
+                    <td style="text-align: left; padding: 10px;">{{ agent.tenu_depuis|date:"d/m/Y"|default:"N/A" }}</td>
+                </tr>
+            </table>
+        </div>
+        <div class="section">
+            <h2>III. ÉVALUATION DU RENDEMENT ET DU COMPORTEMENT</h2>
+            <p>L’évaluateur dispose des standards de notation définis comme suit :</p>
+            <p class="italic">1 = Très insuffisant, 2 = Insuffisant, 3 = Assez Bon, 4 = Bon, 5 = Très Bon</p>
+        </div>
+
+        <div style="page-break-before: always;"></div>
+        <div style="page">
+            <div class="section">
+                <h3>A. Évaluation du rendement</h3>
+                <table>
+                    <tr><th>Critères de rendement</th><th>Notation du Directeur ou du Responsable de structure </th></tr>
+                    <tr><td style="text-align: left; padding: 10px;">Connaissances et aptitudes professionnelles</td><td style="text-align: center; padding: 10px;">{{ evaluation.connaissances }}</td></tr>
+                    <tr><td style="text-align: left; padding: 10px;">Esprit d’initiative</td><td style="text-align: center; padding: 10px;">{{ evaluation.initiative }}</td></tr>
+                    <tr><td style="text-align: left; padding: 10px;">Puissance du travail et rendement</td><td style="text-align: center; padding: 10px;">{{ evaluation.rendement }}</td></tr>
+                    <tr><td style="text-align: left; padding: 10px;">Respect des objectifs</td><td style="text-align: center; padding: 10px;">{{ evaluation.respect_objectifs }}</td></tr>
+                    <tr><td class="bold">Total Notes</td><td style="text-align: center; padding: 10px;">{{ evaluation.connaissances|add:evaluation.initiative|add:evaluation.rendement|add:evaluation.respect_objectifs }}</td></tr>
+                    <tr><td class="bold">Moyenne (M1) = Total / 4</td><td style="text-align: center; padding: 10px;">{{ evaluation.moyenne_rendement|floatformat:3 }}</td></tr>
+                </table>
+
+                <h3>B. Évaluation du Comportement</h3>
+                <table>
+                    <tr><th>Critères de comportement</th><th>Notation</th></tr>
+                    <tr><td style="text-align: left; padding: 10px;">Civisme, intégrité et moralité</td><td style="text-align: center; padding: 10px;">{{ evaluation.civisme }}</td></tr>
+                    <tr><td style="text-align: left; padding: 10px;">Sens du service public</td><td style="text-align: center; padding: 10px;">{{ evaluation.service_public }}</td></tr>
+                    <tr><td style="text-align: left; padding: 10px;">Relations humaines</td><td style="text-align: center; padding: 10px;">{{ evaluation.relations_humaines }}</td></tr>
+                    <tr><td style="text-align: left; padding: 10px;">Discipline</td><td style="text-align: center; padding: 10px;">{{ evaluation.discipline }}</td></tr>
+                    <tr><td style="text-align: left; padding: 10px;">Ponctualité</td><td style="text-align: center; padding: 10px;">{{ evaluation.ponctualite }}</td></tr>
+                    <tr><td style="text-align: left; padding: 10px;">Assiduité</td><td style="text-align: center; padding: 10px;">{{ evaluation.assiduite }}</td></tr>
+                    <tr><td style="text-align: left; padding: 10px;">Tenue vestimentaire</td><td style="text-align: center; padding: 10px;">{{ evaluation.tenue }}</td></tr>
+                    <tr><td class="bold">Total</td><td style="text-align: center; padding: 10px;">{{ evaluation.civisme|add:evaluation.service_public|add:evaluation.relations_humaines|add:evaluation.discipline|add:evaluation.ponctualite|add:evaluation.assiduite|add:evaluation.tenue }}</td></tr>
+                    <tr><td class="bold">Moyenne (M2) = Total / 7</td><td>{{ evaluation.moyenne_comportement|floatformat:3 }}</td></tr>
+                </table>
+            </div>
+        </div>
+        <div style="page">
+            <div class="section">
+                {% if evaluation.type_personnel == 'responsable' %}
+                <h3>C. Évaluation du Management</h3>
+                <table>
+                    <tr><th>Critères de management</th><th>Notation</th></tr>
+                    <tr><td>Leadership</td><td>{{ evaluation.leadership }}</td></tr>
+                    <tr><td>Planification</td><td>{{ evaluation.planification }}</td></tr>
+                    <tr><td>Prise de décision</td><td>{{ evaluation.prise_decision }}</td></tr>
+                    <tr><td>Résolution de problèmes</td><td>{{ evaluation.resolution_problemes }}</td></tr>
+                    <tr><td>Travail d’équipe</td><td>{{ evaluation.travail_equipe }}</td></tr>
+                    <tr><td class="bold">Total</td><td>{{ evaluation.leadership|add:evaluation.planification|add:evaluation.prise_decision|add:evaluation.resolution_problemes|add:evaluation.travail_equipe }}</td></tr>
+                    <tr><td class="bold">Moyenne (M3) = Total / 5</td><td>{{ evaluation.moyenne_management|floatformat:3 }}</td></tr>
+                </table>
+                {% endif %}
+            </div>
+
+
+            <h4>{% if evaluation.type_personnel == 'responsable' %}D{% else %}C{% endif %}. Note Finale S{{ evaluation.semestre }} / 5</h4>
+            <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                <colgroup>
+                    <col style="width: 35%;">
+                    <col style="width: 20%;">
+                    <col style="width: 15%;">
+                    <col style="width: 30%;">
+                </colgroup>
+                <thead>
+                    <tr style="background-color: #f2f2f2;">
+                        <th style="border: 1px solid black; padding: 10px; font-size: 8pt;">Moyennes</th>
+                        <th style="border: 1px solid black; padding: 10px; font-size: 8pt;">Moy.<br>/ 5</th>
+                        <th style="border: 1px solid black; padding: 10px; font-size: 8pt;">Coeff.</th>
+                        <th style="border: 1px solid black; padding: 10px; font-size: 8pt;">Moy. pond.<br>(MP)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border: 1px solid #000; padding: 10px; font-size: 8pt;">Moy. éval.<br>rendement (M1)</td>
+                        <td style="border: 1px solid black; text-align: center; font-size: 8pt;">
+                            {{ evaluation.moyenne_rendement|floatformat:3 }}
+                        </td>
+                        <td style="border: 1px solid #000; text-align: center; font-size: 8pt;">2</td>
+                        <td style="border: 1px solid #000; text-align: center; font-size: 8pt;">
+                            {% load evaluation_filters %}
+                            {{ evaluation.moyenne_rendement|multiply:2|floatformat:3 }} / 10
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #000; padding: 10px; font-size: 8pt;">Moy. éval.<br>comportement (M2)</td>
+                        <td style="border: 1px solid #000; text-align: center; font-size: 8pt;">
+                            {{ evaluation.moyenne_comportement|floatformat:3 }}
+                        </td>
+                        <td style="border: 1px solid #000; text-align: center; font-size: 8pt;">1</td>
+                        <td style="border: 1px solid #000; text-align: center; font-size: 8pt;">
+                            {{ evaluation.moyenne_comportement|floatformat:3 }} / 5
+                        </td>
+                    </tr>
+                    {% if evaluation.type_personnel == 'responsable' %}
+                    <tr>
+                        <td style="border: 1px solid #000; padding: 3px; font-size: 8pt;">Moy. éval.<br>management (M3)</td>
+                        <td style="border: 1px solid #000; text-align: center; font-size: 8pt;">
+                            {{ evaluation.moyenne_management|floatformat:3 }}
+                        </td>
+                        <td style="border: 1px solid #000; text-align: center; font-size: 8pt;">2</td>
+                        <td style="border: 1px solid #000; text-align: center; font-size: 8pt;">
+                            {% load evaluation_filters %}
+                            {{ evaluation.moyenne_management|multiply:2|floatformat:3 }} / 10
+                        </td>
+                    </tr>
+                    {% endif %}
+                    <tr style="background-color: #ccc; font-weight: bold;">
+                        <td style="border: 1px solid #000; padding: 3px; font-size: 8pt;">
+                            Total Moy. :<br>Somme (MP1+MP2{% if evaluation.type_personnel == 'responsable' %}+MP3{% endif %})
+                        </td>
+                        <td style="border: 1px solid #000;"></td>
+                        <td style="border: 1px solid #000; text-align: center; font-size: 8pt;">
+                            {% if evaluation.type_personnel == 'responsable' %}5{% else %}3{% endif %}
+                        </td>
+                        <td style="border: 1px solid #000; text-align: center; font-size: 8pt;">
+                            {{ evaluation.somme_moyennes_ponderees|floatformat:3 }} / {% if evaluation.type_personnel == 'responsable' %}25{% else %}15{% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" style="border: 1px solid #000; text-align: center; font-weight: bold; font-size: 8pt;">
+                            Moyenne Générale. S{{ evaluation.semestre }} / {% if evaluation.type_personnel == 'responsable' %}5{% else %}3{% endif %}
+                        </td>
+                        <td style="border: 1px solid #000; text-align: center; font-size: 8pt;">
+                            {{ evaluation.moyenne_generale|floatformat:3 }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="section">
+            <div class="avis-section">
+                <h3 style="text-align: center; font-weight: bold;">Avis du Directeur ou du Responsable de structure</h3>
+                <p style="text-align: center;">{{ evaluation.avis_directeur|default:"" }}</p>
+
+                {# Cas 1 : l’agent évalué n’est PAS un directeur → on affiche la signature du Directeur #}
+                {% if evaluation.agent.utilisateur.role != 'directeur' and signature_path %}
+                    <p>Signature :</p>
+                    <div class="signature">
+                        <img src="{{ signature_path }}" alt="Signature du Directeur"
+                            style="max-height:40mm; width:auto; display:block; margin:4px auto;">
+                    </div>
+
+                {# Cas 2 : l’agent évalué EST un directeur → on affiche la signature du DG #}
+                {% elif evaluation.agent.utilisateur.role == 'directeur' and signature_dg_path %}
+                    <p>Signature du Directeur Général :</p>
+                    <div class="signature">
+                        <img src="{{ signature_dg_path }}" alt="Signature du DG"
+                            style="max-height:40mm; width:auto; display:block; margin:4px auto;">
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="avis-section">
+                <h3 style="text-align: center; font-weight: bold;">Avis de l’agent évalué et projet professionnel</h3>
+                <p class="avis-text" style="text-align: center;">{{ evaluation.avis_agent|default:"" }}</p>
+                {% if signature_agent_path %}
+                <p>Signature :</p>
+                <div class="signature">
+                    <img src="{{ signature_agent_path }}" alt="Signature de l’agent" style="max-height:40mm; width:auto; display:block; margin:4px auto;">
+                </div>
+                {% endif %}
+                <p>Date : {{ evaluation.date_signature_agent|date:"d/m/Y" }}</p>
+            </div>
+        </div>
+
+        {% if evaluation.semestre == 2 %}
+        <div class="section">
+            <h4>A. Note Finale Annuelle (S1+S2) / 5</h4>
+            <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                <colgroup>
+                    <col style="width: 35%;">
+                    <col style="width: 20%;">
+                    <col style="width: 15%;">
+                    <col style="width: 30%;">
+                </colgroup>
+                <thead>
+                    <tr style="background-color: #f2f2f2;">
+                        <th style="border: 1px solid black; padding: 10px; font-size: 8pt;">Moyennes semestrielles</th>
+                        <th style="border: 1px solid black; padding: 10px; font-size: 8pt;">Moyenne / 5</th>
+                        <th style="border: 1px solid black; padding: 10px; font-size: 8pt;">Coeff.</th>
+                        <th style="border: 1px solid black; padding: 10px; font-size: 8pt;">Moyenne pondérée Annuelle (MPA)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% with mpa_s1=evaluation.get_moyenne_s1 %}
+                    {% if mpa_s1 %}
+                        {% with mpa_s1_mpa_s2_moyenne_generale=evaluation.calcul_note_finale_annuelle %}
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 10px; font-size: 8pt;">Moyenne S1</td>
+                            <td style="border: 1px solid black; text-align: center; font-size: 8pt;">
+                                {{ evaluation.mpa_s1|floatformat:3 }}
+                            </td>
+                            <td style="border: 1px solid #000; text-align: center; font-size: 8pt;">1</td>
+                            <td style="border: 1px solid #000; text-align: center; font-size: 8pt;">
+                                {{ evaluation.mpa_s1|floatformat:3 }} / 5
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 10px; font-size: 8pt;">Moyenne S2</td>
+                            <td style="border: 1px solid #000; text-align: center; font-size: 8pt;">
+                                {{ evaluation.moyenne_generale|floatformat:3 }}
+                            </td>
+                            <td style="border: 1px solid #000; text-align: center; font-size: 8pt;">2</td>
+                            <td style="border: 1px solid #000; text-align: center; font-size: 8pt;">
+                                {{ evaluation.mpa_s2|floatformat:3 }} / 10
+                            </td>
+                        </tr>
+                        <tr style="background-color: #ccc; font-weight: bold;">
+                            <td style="border: 1px solid #000; padding: 10px; font-size: 8pt;">
+                                Total Moyenne Annuelle :<br>Somme (S1+S2)
+                            </td>
+                            <td style="border: 1px solid #000;"></td>
+                            <td style="border: 1px solid #000; text-align: center; font-size: 8pt;">3</td>
+                            <td style="border: 1px solid #000; text-align: center; font-size: 8pt;">
+                                {{ evaluation.total_mpa|floatformat:3 }} / 15
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="border: 1px solid #000; text-align: center; font-weight: bold; font-size: 8pt;">
+                                Moyenne Générale Annuelle (S1+S2) / 3
+                            </td>
+                            <td style="border: 1px solid #000; text-align: center; font-size: 8pt;">
+                                {{ evaluation.moyenne_generale_annuelle|floatformat:3 }} / 5
+                            </td>
+                        </tr>
+                        {% endwith %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4" style="border: 1px solid #000; text-align: center; font-size: 8pt; color: red;">
+                                Aucune évaluation trouvée pour le semestre 1.
+                            </td>
+                        </tr>
+                    {% endif %}
+                    {% endwith %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        {% load evaluation_filters %}
+        <div class="section">
+            <h3>{% if evaluation.type_personnel == 'responsable' %}E{% else %}L{% endif %}. DÉCISION FINALE</h3>
+            {% with decs=decisions_list %}
+                {% if decs %}
+                    <table>
+                        {% if 'formation' in decs %}
+                            <tr><td style="text-align:left; padding:10px;">Formation</td></tr>
+                        {% endif %}
+                        {% if 'promotion' in decs %}
+                            <tr><td style="text-align:left; padding:10px;">Promotion</td></tr>
+                        {% endif %}
+                        {% if 'augmentation' in decs %}
+                            <tr><td style="text-align:left; padding:10px;">Augmentation de salaire (au mérite)</td></tr>
+                        {% endif %}
+                        {% if 'rupture' in decs %}
+                            <tr><td style="text-align:left; padding:10px;">Rupture de contrat</td></tr>
+                        {% endif %}
+                        {% if 'autres' in decs and evaluation.autres_decision %}
+                            <tr><td style="text-align:left; padding:10px;">Autres : {{ evaluation.autres_decision }}</td></tr>
+                        {% endif %}
+                    </table>
+                {% else %}
+                    <table>
+                        <tr><td style="text-align:left; padding:10px; color:red;">Aucune décision enregistrée</td></tr>
+                    </table>
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        <div class="section">
+            <div class="avis-section">
+                {% if signature_dg_path %}
+                <p>Signature du DG Date : {{ evaluation.date_signature_dg|date:"d/m/Y" }}</p>
+                <div class="signature">
+                    <img src="{{ signature_dg_path }}" alt="Signature du DG" style="max-height:40mm; width:auto; display:block; margin:4px auto;">
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

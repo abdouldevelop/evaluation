@@ -1,0 +1,405 @@
+{% extends 'fiches/base.html' %}
+{% load static %}
+
+{% block title %}Ajouter/Modifier Avis - Évaluation {{ evaluation.annee }} - {{ evaluation.get_semestre_display }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ========================================
+       VARIABLES CSS - CHARTE GRAPHIQUE
+       ======================================== */
+    :root {
+        --primary: #4c6559;
+        --primary-dark: #3a4f44;
+        --primary-light: #7a9882;
+        --secondary: #eea12e;
+        --secondary-dark: #d89125;
+        --secondary-light: #f5b858;
+    }
+
+    /* ========================================
+       ANIMATIONS KEYFRAMES
+       ======================================== */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.02);
+        }
+    }
+
+    /* ========================================
+       TITRE PRINCIPAL
+       ======================================== */
+    .main-title {
+        color: var(--primary-dark);
+        animation: fadeInUp 0.6s ease-out;
+        position: relative;
+        padding-bottom: 1rem;
+    }
+
+    .main-title::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100px;
+        height: 4px;
+        background: linear-gradient(90deg, var(--secondary) 0%, var(--secondary-light) 100%);
+        border-radius: 2px;
+        animation: scaleIn 0.6s ease-out 0.3s both;
+    }
+
+    /* ========================================
+       CONTENEUR PRINCIPAL
+       ======================================== */
+    .main-container {
+        animation: scaleIn 0.6s ease-out 0.2s both;
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        transition: all 0.3s ease;
+    }
+
+    .main-container:hover {
+        box-shadow: 0 15px 50px rgba(76, 101, 89, 0.15);
+    }
+
+    /* ========================================
+       BARRES DE SECTION
+       ======================================== */
+    .section-bar {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .section-bar::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: pulse 3s ease-in-out infinite;
+    }
+
+    /* ========================================
+       CHAMPS DE FORMULAIRE
+       ======================================== */
+    .form-textarea {
+        border: 2px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+
+    .form-textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(76, 101, 89, 0.1);
+    }
+
+    .form-textarea:hover {
+        border-color: var(--primary-light);
+    }
+
+    /* ========================================
+       BOUTONS
+       ======================================== */
+    .btn-submit {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        animation: fadeInUp 0.6s ease-out 0.5s both;
+    }
+
+    .btn-submit::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-submit:hover::before {
+        left: 100%;
+    }
+
+    .btn-submit:hover {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, #2a3a31 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(76, 101, 89, 0.3);
+    }
+
+    .btn-retour {
+        background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        color: white;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        animation: fadeInUp 0.6s ease-out 0.6s both;
+    }
+
+    .btn-retour:hover {
+        background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(107, 114, 128, 0.3);
+    }
+
+    /* ========================================
+       BARRE DE PROGRESSION
+       ======================================== */
+    .progress-bar {
+        background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+    }
+
+    .progress-bar.warning {
+        background: linear-gradient(90deg, var(--secondary) 0%, var(--secondary-light) 100%);
+    }
+
+    .progress-bar.danger {
+        background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+    }
+
+    /* ========================================
+       MESSAGES
+       ======================================== */
+    .message-success {
+        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        border-left: 4px solid #10b981;
+    }
+
+    .message-error {
+        background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+        border-left: 4px solid #ef4444;
+    }
+
+    /* ========================================
+       RESPONSIVE
+       ======================================== */
+    @media (max-width: 768px) {
+        .main-title {
+            font-size: 1.5rem;
+        }
+    }
+
+    /* ========================================
+       SCROLLBAR PERSONNALISÉE
+       ======================================== */
+    ::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
+        border-radius: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-6">
+    <h2 class="main-title text-2xl font-bold mb-6 text-center">
+        ✏️ Ajouter/Modifier Votre Avis
+    </h2>
+    <p class="text-center text-gray-600 mb-8">
+        Évaluation {{ evaluation.annee }} - {{ evaluation.get_semestre_display }}
+    </p>
+
+    <div class="main-container bg-white rounded-lg shadow-lg overflow-hidden">
+        <!-- En-tête -->
+        <div class="section-bar text-center py-4">
+            <h3 class="text-xl font-semibold relative z-10 flex items-center justify-center">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                </svg>
+                Votre Avis sur l'Évaluation
+            </h3>
+        </div>
+
+        <div class="p-8">
+            <!-- Messages -->
+            {% if messages %}
+                <div class="mb-6 space-y-2">
+                    {% for message in messages %}
+                        <div class="flex items-center p-4 rounded-xl {% if message.tags == 'error' %}message-error{% elif message.tags == 'success' %}message-success{% else %}bg-blue-50 border-l-4 border-blue-400{% endif %}">
+                            <div class="flex-shrink-0">
+                                {% if message.tags == 'error' %}
+                                    <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                    </svg>
+                                {% elif message.tags == 'success' %}
+                                    <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                    </svg>
+                                {% endif %}
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium {% if message.tags == 'error' %}text-red-800{% elif message.tags == 'success' %}text-green-800{% else %}text-blue-800{% endif %}">
+                                    {{ message }}
+                                </p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Formulaire -->
+            {% if not is_signed %}
+                <form method="post" action="{% url 'ajouter_avis_agent' evaluation.id %}" class="space-y-6" id="avisForm" onsubmit="return validateForm()">
+                    {% csrf_token %}
+
+                    <div class="relative">
+                        <label for="avis_agent" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-[#eea12e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                            </svg>
+                            Votre avis
+                        </label>
+                        <textarea
+                            name="avis_agent"
+                            id="avis_agent"
+                            class="form-textarea w-full px-4 py-4 bg-white border-2 border-gray-200 rounded-xl shadow-sm resize-none h-40 text-gray-800 placeholder-gray-400"
+                            placeholder="Exprimez votre avis sur cette évaluation... (500 caractères max)"
+                            oninput="updateCharCount()"
+                        >{{ evaluation.avis_agent|default_if_none:"" }}</textarea>
+
+                        <!-- Barre de progression des caractères -->
+                        <div class="mt-3 bg-gray-100 rounded-full h-2">
+                            <div id="progressBar" class="progress-bar h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+
+                        <!-- Compteur et erreur -->
+                        <div class="flex justify-between items-center mt-2">
+                            <p id="char-count" class="text-sm font-medium text-gray-600">0/500 caractères</p>
+                            <p id="error-message" class="text-red-500 text-sm font-medium"></p>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit w-full py-4 px-6 rounded-xl font-semibold text-lg shadow-lg">
+                        <span class="flex items-center justify-center">
+                            {% if evaluation.avis_agent %}
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Mettre à jour mon avis
+                            {% else %}
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Soumettre mon avis
+                            {% endif %}
+                        </span>
+                    </button>
+                </form>
+            {% else %}
+                <div class="bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200 rounded-xl p-6 text-center">
+                    <div class="flex items-center justify-center mb-3">
+                        <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-blue-800 mb-2">Avis verrouillé</h3>
+                    <p class="text-blue-600">Votre avis est verrouillé car l'évaluation a été signée par le directeur.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Bouton retour -->
+    <div class="text-center mt-6">
+        <a href="{% url 'dashboard_agent' %}" class="btn-retour inline-flex items-center px-6 py-3 rounded-xl font-semibold">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            Retour au tableau de bord
+        </a>
+    </div>
+</div>
+
+<script>
+    document.getElementById('avis_agent').addEventListener('input', function(e) {
+        const forbiddenChars = /[@/#&"#~{[|``:+°)0-9;*ù^()§_?=*$<>\\]/g;
+        this.value = this.value.replace(forbiddenChars, '');
+    });
+
+    function validateForm() {
+        const avis = document.getElementById('avis_agent').value;
+        const pattern = /^[a-zA-ZÀ-ÿ\s.,'-]+$/;
+        const errorMessage = document.getElementById('error-message');
+
+        if (!avis) {
+            errorMessage.textContent = "L'avis ne peut pas être vide.";
+            return false;
+        }
+
+        if (avis.length > 500) {
+            errorMessage.textContent = "L'avis ne doit pas dépasser 500 caractères.";
+            return false;
+        }
+
+        errorMessage.textContent = "";
+        return true;
+    }
+
+    function updateCharCount() {
+        const avis = document.getElementById('avis_agent').value;
+        const charCount = document.getElementById('char-count');
+        const progressBar = document.getElementById('progressBar');
+
+        const length = avis.length;
+        const percentage = (length / 500) * 100;
+
+        charCount.textContent = `${length}/500 caractères`;
+        progressBar.style.width = `${Math.min(percentage, 100)}%`;
+
+        // Réinitialiser les classes
+        progressBar.classList.remove('warning', 'danger');
+        charCount.classList.remove('text-red-500', 'text-yellow-600');
+
+        if (length > 500) {
+            charCount.classList.add('text-red-500');
+            progressBar.classList.add('danger');
+        } else if (length > 400) {
+            charCount.classList.add('text-yellow-600');
+            progressBar.classList.add('warning');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', updateCharCount);
+</script>
+{% endblock %}

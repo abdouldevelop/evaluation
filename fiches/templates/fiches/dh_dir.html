@@ -1,0 +1,156 @@
+{% extends 'fiches/base.html' %}
+{% load custom_filters %}
+{% load static %}
+
+{% block title %}Tableau de Bord - Directeur{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex flex-col sm:flex-row items-center justify-between mb-8">
+        <div class="order-2 sm:order-1 text-center sm:text-left mt-4 sm:mt-0">
+            <h2 class="text-3xl font-bold text-gray-800">Bienvenue, {{ user.username }} 👨‍💼</h2>
+            <p class="text-gray-600 mt-1">Vous êtes connecté en tant que <span class="font-semibold">Directeur</span>.</p>
+        </div>
+        <div class="order-1 sm:order-2 flex space-x-4">
+            <a href="{% url 'modifier_mot_de_passe' %}" class="px-4 py-2 bg-gray-500 text-white rounded-lg shadow-md hover:bg-gray-600 transition-all duration-300 flex items-center justify-center">
+                <span class="mr-2">🔐</span> Modifier mon mot de passe
+            </a>
+            <a href="{% url 'gerer_signature' %}" class="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition-all duration-300 flex items-center justify-center">
+                <span class="mr-2">✍️</span> Gérer ma signature
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+        <div class="bg-gray-200 text-gray-800 py-4 px-6">
+            <h3 class="text-xl font-semibold text-center">📋 Tableau de Bord du Directeur</h3>
+        </div>
+
+        <div class="max-w-7xl mx-auto p-6">
+            <div class="border-b border-gray-200">
+                <nav class="flex -mb-px">
+                    <button class="tab-button w-1/4 py-4 px-1 text-center border-b-2 font-medium text-sm focus:outline-none" data-tab="evaluer-agents" style="border-color: #f97316; color: #f97316;">
+                        📝 Évaluer les Agents
+                    </button>
+                    <button class="tab-button w-1/4 py-4 px-1 text-center border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none" data-tab="evaluer-responsables">
+                        📋 Évaluer les Responsables
+                    </button>
+                    <button class="tab-button w-1/4 py-4 px-1 text-center border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none" data-tab="evaluations-a-signer">
+                        ✍️ Évaluations à Signer
+                    </button>
+                    <button class="tab-button w-1/4 py-4 px-1 text-center border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none" data-tab="avis-agents">
+                        💬 Avis des Agents
+                    </button>
+                </nav>
+            </div>
+
+            <div class="p-6">
+                <!-- Onglet : Évaluer les Agents -->
+                <div id="evaluer-agents" class="tab-content">
+                    {% comment %} contenu original Évaluer les Agents {% endcomment %}
+                    ...
+                </div>
+
+                <!-- Onglet : Évaluer les Responsables -->
+                <div id="evaluer-responsables" class="tab-content hidden">
+                    {% comment %} contenu original Évaluer les Responsables {% endcomment %}
+                    ...
+                </div>
+
+                <!-- Onglet : Évaluations à Signer -->
+                <div id="evaluations-a-signer" class="tab-content hidden">
+                    <h3 class="text-xl font-semibold text-yellow-600 mb-4">Évaluations à Signer</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-yellow-900 text-white">
+                                    <th class="py-3 px-4 text-left font-semibold">Agent</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Année</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Semestre</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for evaluation in evaluations_a_signer %}
+                                <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
+                                    <td class="py-3 px-4">{{ evaluation.agent.nom }} {{ evaluation.agent.prenoms }}</td>
+                                    <td class="py-3 px-4">{{ evaluation.annee }}</td>
+                                    <td class="py-3 px-4">{{ evaluation.semestre }}</td>
+                                    <td class="py-3 px-4 text-center">
+                                        {% if evaluation.est_signe_agent %}
+                                            {% if not evaluation.est_signe_directeur %}
+                                                <a href="{% url 'signer_evaluation_directeur' evaluation.id %}" class="inline-flex items-center justify-center px-3 py-1 bg-yellow-900 text-white text-sm rounded hover:bg-yellow-600 transition-colors duration-150">
+                                                    ✍️ Signer
+                                                </a>
+                                            {% else %}
+                                                <span class="text-green-600">✅ Déjà signée</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-red-600">⏳ En attente de signature de l'agent</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="py-8 text-center text-gray-500">Aucune évaluation à signer.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Onglet : Avis des Agents -->
+                <div id="avis-agents" class="tab-content hidden">
+                    {% comment %} contenu original Avis des Agents {% endcomment %}
+                    ...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            tabButtons.forEach(btn => {
+                btn.classList.remove('border-orange-custom', 'text-orange-custom');
+                btn.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+            });
+
+            button.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+            button.classList.add('border-orange-custom', 'text-orange-custom');
+
+            tabContents.forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            const tabId = button.getAttribute('data-tab');
+            document.getElementById(tabId).classList.remove('hidden');
+        });
+    });
+});
+</script>
+{% endblock %}
+
+
+
+            <h3 class="text-xl font-semibold text-orange-custom mb-4">📊 A- Évaluation du Rendement</h3>
+            <table class="w-full border-collapse mb-6">
+                <thead>
+                    <tr class="bg-green-custom text-white">
+                        <th class="py-3 px-4 text-left font-semibold">Critères</th>
+                        <th class="py-3 px-4 text-left font-semibold w-40">Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td class="px-4 py-2">Connaissances et aptitudes professionnelles</td><td class="px-4 py-2">{{ form.connaissances }}/5</td></tr>
+                    <tr><td class="px-4 py-2">Esprit d'initiative</td><td class="px-4 py-2">{{ form.initiative }}/5</td></tr>
+                    <tr><td class="px-4 py-2">Puissance du travail et rendement</td><td class="px-4 py-2">{{ form.rendement }}/5</td></tr>
+                    <tr><td class="px-4 py-2">Respect des objectifs</td><td class="px-4 py-2">{{ form.respect_objectifs }}/5</td></tr>
+                </tbody>
+            </table>

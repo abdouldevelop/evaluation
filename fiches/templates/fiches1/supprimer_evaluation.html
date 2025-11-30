@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supprimer une Évaluation</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <h2>Supprimer l'Évaluation</h2>
+        <p>Êtes-vous sûr de vouloir supprimer l'évaluation de {{ evaluation.agent.nom }} {{ evaluation.agent.prenoms }} ({{ evaluation.annee }} - {{ evaluation.get_semestre_display }}) ?</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Confirmer</button>
+            <a href="{% url 'liste_evaluations' %}" class="btn btn-secondary">Annuler</a>
+        </form>
+    </div>
+</body>
+</html>

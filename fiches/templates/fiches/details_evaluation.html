@@ -1,0 +1,618 @@
+{% extends 'fiches/base.html' %}
+{% load static %}
+{% load dict_extras %}
+
+{% block title %}Détails de l'Évaluation{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ========================================
+       🎨 VARIABLES CSS - CHARTE GRAPHIQUE
+       ======================================== */
+    :root {
+        --primary: #4c6559;
+        --primary-dark: #3a4f44;
+        --primary-light: #7a9882;
+        --secondary: #eea12e;
+        --secondary-dark: #d89125;
+        --secondary-light: #f5b858;
+    }
+
+    /* ========================================
+       ✨ ANIMATIONS KEYFRAMES
+       ======================================== */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.05);
+        }
+    }
+
+    /* ========================================
+       📄 EN-TÊTE PAGE
+       ======================================== */
+    .page-header {
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    .page-title {
+        color: var(--primary-dark);
+        position: relative;
+        padding-bottom: 0.5rem;
+    }
+
+    .page-title::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(90deg, var(--secondary) 0%, var(--secondary-light) 100%);
+        border-radius: 2px;
+        animation: slideInRight 0.6s ease-out 0.2s both;
+    }
+
+    /* ========================================
+       📋 CONTENEUR PRINCIPAL
+       ======================================== */
+    .main-container {
+        animation: scaleIn 0.6s ease-out 0.2s both;
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        transition: all 0.3s ease;
+    }
+
+    .main-container:hover {
+        box-shadow: 0 15px 50px rgba(76, 101, 89, 0.15);
+    }
+
+    /* ========================================
+       🎯 BARRE DE TITRE
+       ======================================== */
+    .title-bar {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .title-bar::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: pulse 3s ease-in-out infinite;
+    }
+
+    /* ========================================
+       📦 SECTIONS
+       ======================================== */
+    .section-content {
+        animation: fadeInUp 0.5s ease-out both;
+    }
+
+    .section-content:nth-child(1) { animation-delay: 0.1s; }
+    .section-content:nth-child(2) { animation-delay: 0.2s; }
+    .section-content:nth-child(3) { animation-delay: 0.3s; }
+    .section-content:nth-child(4) { animation-delay: 0.4s; }
+    .section-content:nth-child(5) { animation-delay: 0.5s; }
+    .section-content:nth-child(6) { animation-delay: 0.6s; }
+
+    .section-title {
+        color: var(--primary);
+        font-weight: 600;
+        position: relative;
+        padding-left: 1rem;
+    }
+
+    .section-title::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 70%;
+        background: linear-gradient(180deg, var(--secondary) 0%, var(--secondary-light) 100%);
+        border-radius: 2px;
+    }
+
+    .section-title-alt {
+        color: var(--secondary-dark);
+    }
+
+    /* ========================================
+       📊 LIGNES D'INFORMATION
+       ======================================== */
+    .info-row {
+        transition: all 0.3s ease;
+        border-left: 3px solid transparent;
+        padding-left: 0.5rem;
+    }
+
+    .info-row:hover {
+        background: linear-gradient(90deg, rgba(76, 101, 89, 0.03) 0%, transparent 100%);
+        border-left-color: var(--secondary-light);
+        transform: translateX(4px);
+    }
+
+    /* ========================================
+       🏷️ BADGES NOTES
+       ======================================== */
+    .badge-note {
+        transition: all 0.3s ease;
+        font-weight: 600;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .badge-note:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .badge-excellent {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+    }
+
+    .badge-good {
+        background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
+        color: white;
+    }
+
+    .badge-poor {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+    }
+
+    /* ========================================
+       💬 JUSTIFICATIONS
+       ======================================== */
+    .justification-text {
+        color: #6b7280;
+        font-style: italic;
+        padding: 0.5rem 1rem;
+        background: linear-gradient(90deg, rgba(238, 161, 46, 0.05) 0%, transparent 100%);
+        border-left: 3px solid var(--secondary-light);
+        border-radius: 0 0.5rem 0.5rem 0;
+        margin-top: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .justification-text:hover {
+        background: linear-gradient(90deg, rgba(238, 161, 46, 0.1) 0%, transparent 100%);
+        transform: translateX(4px);
+    }
+
+    /* ========================================
+       📈 MOYENNES
+       ======================================== */
+    .moyenne-box {
+        background: linear-gradient(135deg, rgba(76, 101, 89, 0.1) 0%, rgba(76, 101, 89, 0.05) 100%);
+        border: 2px solid var(--primary-light);
+        transition: all 0.3s ease;
+    }
+
+    .moyenne-box:hover {
+        border-color: var(--primary);
+        box-shadow: 0 4px 12px rgba(76, 101, 89, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .moyenne-value {
+        color: var(--primary);
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+
+    /* ========================================
+       📋 TABLEAU MANAGEMENT
+       ======================================== */
+    .management-table {
+        border-radius: 0.5rem;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .management-table tr {
+        transition: all 0.3s ease;
+    }
+
+    .management-table tr:hover {
+        background: linear-gradient(90deg, rgba(76, 101, 89, 0.05) 0%, transparent 100%);
+    }
+
+    .management-table td {
+        border-left: 3px solid transparent;
+        transition: border-color 0.3s ease;
+    }
+
+    .management-table tr:hover td:first-child {
+        border-left-color: var(--secondary);
+    }
+
+    .total-row {
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        font-weight: 600;
+    }
+
+    .moyenne-row {
+        background: linear-gradient(135deg, rgba(76, 101, 89, 0.15) 0%, rgba(76, 101, 89, 0.05) 100%);
+    }
+
+    /* ========================================
+       💭 AVIS CARDS
+       ======================================== */
+    .avis-card {
+        background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+        border: 2px solid #e5e7eb;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .avis-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(180deg, var(--primary) 0%, var(--primary-light) 100%);
+        transform: scaleY(0);
+        transition: transform 0.3s ease;
+    }
+
+    .avis-card:hover::before {
+        transform: scaleY(1);
+    }
+
+    .avis-card:hover {
+        border-color: var(--primary-light);
+        box-shadow: 0 8px 16px rgba(76, 101, 89, 0.1);
+        transform: translateY(-4px);
+    }
+
+    .avis-title {
+        color: var(--primary-dark);
+        font-weight: 600;
+    }
+
+    .avis-content {
+        color: #4b5563;
+    }
+
+    .empty-avis {
+        color: #9ca3af;
+        font-style: italic;
+    }
+
+    /* ========================================
+       🔘 BOUTONS
+       ======================================== */
+    .btn-retour {
+        background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        color: white;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-retour::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-retour:hover::before {
+        left: 100%;
+    }
+
+    .btn-retour:hover {
+        background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(107, 114, 128, 0.3);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-primary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-primary:hover::before {
+        left: 100%;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, #2a3a31 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(76, 101, 89, 0.3);
+    }
+
+    .btn-primary:active,
+    .btn-retour:active {
+        transform: translateY(0);
+    }
+
+    /* ========================================
+       📱 RESPONSIVE
+       ======================================== */
+    @media (max-width: 768px) {
+        .page-title {
+            font-size: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1rem;
+        }
+
+        .avis-card {
+            margin-bottom: 1rem;
+        }
+
+        .btn-primary,
+        .btn-retour {
+            width: 100%;
+            justify-content: center;
+            margin-bottom: 0.5rem;
+        }
+    }
+
+    /* ========================================
+       🎯 SCROLLBAR PERSONNALISÉE
+       ======================================== */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
+        border-radius: 10px;
+        transition: background 0.3s ease;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, var(--primary-dark) 0%, #2a3a31 100%);
+    }
+
+    /* ========================================
+       🖨️ PRINT STYLES
+       ======================================== */
+    @media print {
+        .btn-primary,
+        .btn-retour {
+            display: none;
+        }
+
+        .main-container {
+            box-shadow: none;
+        }
+
+        body {
+            background: white;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+  <!-- Page Header -->
+  <div class="page-header mb-8 flex justify-between items-center">
+    <h2 class="page-title text-2xl font-bold">📄 Détails de l'Évaluation</h2>
+  </div>
+
+  <div class="main-container bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+    <!-- Header Bar -->
+    <div class="title-bar py-4 px-6 text-center">
+      <h3 class="text-xl font-semibold relative z-10">
+        Évaluation de {{ evaluation.agent.nom }} {{ evaluation.agent.prenoms }}
+      </h3>
+    </div>
+
+    <!-- Main Body -->
+    <div class="p-6 space-y-8">
+
+      <!-- Informations Générales -->
+      <div class="section-content">
+        <h4 class="section-title text-lg mb-3 border-b border-gray-200 pb-2">
+          Informations Générales
+        </h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="info-row flex justify-between py-2 border-b border-gray-100">
+            <span class="font-medium text-gray-700">Année :</span>
+            <span>{{ evaluation.annee }}</span>
+          </div>
+          <div class="info-row flex justify-between py-2 border-b border-gray-100">
+            <span class="font-medium text-gray-700">Semestre :</span>
+            <span>{{ evaluation.get_semestre_display }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rendement -->
+      <div class="section-content">
+        <h4 class="section-title section-title-alt text-lg mb-3 border-b border-gray-200 pb-2">
+          Rendement
+        </h4>
+        <div class="space-y-4">
+          {% for crit, value in crit_re %}
+            <div class="flex flex-col">
+              <div class="info-row flex justify-between py-2 border-b border-gray-100">
+                <span class="font-medium text-gray-700">{{ crit_labels|get_item:crit }}</span>
+                <span class="badge-note px-3 py-1 rounded-full {% if value >= 3 %}badge-excellent{% elif value >= 2 %}badge-good{% else %}badge-poor{% endif %}">{{ value }}</span>
+              </div>
+              {% for just in evaluation.justifications.all %}
+                {% if just.critere == crit %}
+                  <div class="justification-text text-sm">🖋️ {{ just.justification }}</div>
+                {% endif %}
+              {% endfor %}
+            </div>
+          {% endfor %}
+          <div class="moyenne-box flex justify-between py-3 px-4 mt-2 rounded-md">
+            <span class="font-semibold text-gray-700">Moyenne Rendement :</span>
+            <span class="moyenne-value">{{ evaluation.moyenne_rendement|floatformat:2 }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comportement -->
+      <div class="section-content">
+        <h4 class="section-title section-title-alt text-lg mb-3 border-b border-gray-200 pb-2">
+          Comportement
+        </h4>
+        <div class="space-y-4">
+          {% for crit, value in crit_com %}
+            <div class="flex flex-col">
+              <div class="info-row flex justify-between py-2 border-b border-gray-100">
+                <span class="font-medium text-gray-700">{{ crit_labels|get_item:crit }}</span>
+                <span class="badge-note px-3 py-1 rounded-full {% if value >= 3 %}badge-excellent{% elif value >= 2 %}badge-good{% else %}badge-poor{% endif %}">{{ value }}</span>
+              </div>
+              {% for just in evaluation.justifications.all %}
+                {% if just.critere == crit %}
+                  <div class="justification-text text-sm">🖋️ {{ just.justification }}</div>
+                {% endif %}
+              {% endfor %}
+            </div>
+          {% endfor %}
+          <div class="moyenne-box flex justify-between py-3 px-4 mt-2 rounded-md">
+            <span class="font-semibold text-gray-700">Moyenne Comportement :</span>
+            <span class="moyenne-value">{{ evaluation.moyenne_comportement|floatformat:2 }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Management (Responsables) -->
+      {% if user.is_rh or user.is_directeur %}
+      <div class="section-content">
+        <h4 class="section-title section-title-alt text-lg mb-3 border-b border-gray-200 pb-2">
+          Management
+        </h4>
+        <div class="space-y-4 overflow-x-auto">
+          <table class="management-table w-full border-collapse">
+            <tbody>
+              <tr class="border-b border-gray-200">
+                <td class="py-3 px-4 bg-gray-50 font-medium">Leadership :</td>
+                <td class="py-3 px-4">{{ evaluation.leadership }}</td>
+              </tr>
+              <tr class="border-b border-gray-200">
+                <td class="py-3 px-4 bg-gray-50 font-medium">Planification des activités :</td>
+                <td class="py-3 px-4">{{ evaluation.planification }}</td>
+              </tr>
+              <tr class="border-b border-gray-200">
+                <td class="py-3 px-4 bg-gray-50 font-medium">Prise de Décision :</td>
+                <td class="py-3 px-4">{{ evaluation.prise_decision }}</td>
+              </tr>
+              <tr class="border-b border-gray-200">
+                <td class="py-3 px-4 bg-gray-50 font-medium">Résolution de Problèmes :</td>
+                <td class="py-3 px-4">{{ evaluation.resolution_problemes }}</td>
+              </tr>
+              <tr class="border-b border-gray-200">
+                <td class="py-3 px-4 bg-gray-50 font-medium">Travail d'Équipe :</td>
+                <td class="py-3 px-4">{{ evaluation.travail_equipe }}</td>
+              </tr>
+              <tr class="total-row border-b border-gray-200">
+                <td class="py-3 px-4">Total Notes :</td>
+                <td class="py-3 px-4">{{ evaluation.leadership|add:evaluation.planification|add:evaluation.prise_decision|add:evaluation.resolution_problemes|add:evaluation.travail_equipe }}</td>
+              </tr>
+              <tr class="moyenne-row">
+                <td class="py-3 px-4 font-semibold">Moyenne Management :</td>
+                <td class="py-3 px-4 font-semibold moyenne-value">{{ evaluation.moyenne_management|floatformat:2 }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Avis et Commentaires -->
+      <div class="section-content">
+        <h4 class="section-title text-lg mb-3 border-b border-gray-200 pb-2">
+          Avis et Commentaires
+        </h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="avis-card p-4 rounded-lg">
+            <h5 class="avis-title mb-2">Avis du Directeur :</h5>
+            <p class="avis-content">{% if evaluation.avis_directeur %}{{ evaluation.avis_directeur }}{% else %}<span class="empty-avis">Aucun avis fourni</span>{% endif %}</p>
+          </div>
+          <div class="avis-card p-4 rounded-lg">
+            <h5 class="avis-title mb-2">Avis de l'Agent :</h5>
+            <p class="avis-content">{% if evaluation.avis_agent %}{{ evaluation.avis_agent }}{% else %}<span class="empty-avis">Aucun avis fourni</span>{% endif %}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex flex-col sm:flex-row justify-center gap-4">
+        <a href="{% if user.is_rh %}{% url 'dashboard_rh' %}{% elif user.is_directeur %}{% url 'dashboard_directeur' %}{% endif %}" class="btn-retour px-6 py-3 rounded-lg inline-flex items-center justify-center">⬅️ Retour</a>
+        <a href="{% url 'generer_fiche_evaluation_pdf' evaluation.id %}" class="btn-primary px-6 py-3 rounded-lg inline-flex items-center justify-center">🖨️ Télécharger la fiche PDF</a>
+        <button onclick="window.print()" class="btn-primary px-6 py-3 rounded-lg inline-flex items-center justify-center">🖨️ Imprimer</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

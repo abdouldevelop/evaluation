@@ -1,0 +1,164 @@
+{% extends 'fiches/base.html' %}
+{% load static %}
+{% load dict_extras %}
+
+{% block title %}Détails de l'Évaluation{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+  <!-- Page Header -->
+  <div class="mb-8 flex justify-between items-center">
+    <h2 class="text-2xl font-bold">📄 Détails de l'Évaluation</h2>
+  </div>
+
+  <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+    <!-- Header Bar -->
+    <div class="bg-green-custom text-white py-4 px-6 text-center">
+      <h3 class="text-xl font-semibold">
+        Évaluation de {{ evaluation.agent.nom }} {{ evaluation.agent.prenoms }}
+      </h3>
+    </div>
+
+    <!-- Main Body -->
+    <div class="p-6 space-y-8">
+
+      <!-- Informations Générales -->
+      <div>
+        <h4 class="text-lg font-medium text-green-custom mb-3 border-b border-gray-200 pb-2">
+          Informations Générales
+        </h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="flex justify-between py-2 border-b border-gray-100">
+            <span class="font-medium text-gray-700">Année :</span>
+            <span>{{ evaluation.annee }}</span>
+          </div>
+          <div class="flex justify-between py-2 border-b border-gray-100">
+            <span class="font-medium text-gray-700">Semestre :</span>
+            <span>{{ evaluation.get_semestre_display }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rendement -->
+      <div>
+        <h4 class="text-lg font-medium text-orange-custom mb-3 border-b border-gray-200 pb-2">
+          Rendement
+        </h4>
+        <div class="space-y-4">
+          {% for crit, value in crit_re %}
+            <div class="flex flex-col">
+              <div class="flex justify-between py-2 border-b border-gray-100">
+                <span class="font-medium text-gray-700">{{ crit_labels|get_item:crit }}</span>
+                <span class="px-2 py-1 rounded-full {% if value >= 3 %}bg-green-100 text-green-800{% elif value >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">{{ value }}</span>
+              </div>
+              {% for just in evaluation.justifications.all %}
+                {% if just.critere == crit %}
+                  <div class="mt-1 ml-4 text-sm text-gray-600 italic">🖋️ {{ just.justification }}</div>
+                {% endif %}
+              {% endfor %}
+            </div>
+          {% endfor %}
+          <div class="flex justify-between py-2 mt-2 bg-green-custom/10 p-2 rounded-md">
+            <span class="font-semibold text-gray-700">Moyenne Rendement :</span>
+            <span class="font-semibold text-green-custom">{{ evaluation.moyenne_rendement|floatformat:2 }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comportement -->
+      <div>
+        <h4 class="text-lg font-medium text-orange-custom mb-3 border-b border-gray-200 pb-2">
+          Comportement
+        </h4>
+        <div class="space-y-4">
+          {% for crit, value in crit_com %}
+            <div class="flex flex-col">
+              <div class="flex justify-between py-2 border-b border-gray-100">
+                <span class="font-medium text-gray-700">{{ crit_labels|get_item:crit }}</span>
+                <span class="px-2 py-1 rounded-full {% if value >= 3 %}bg-green-100 text-green-800{% elif value >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">{{ value }}</span>
+              </div>
+              {% for just in evaluation.justifications.all %}
+                {% if just.critere == crit %}
+                  <div class="mt-1 ml-4 text-sm text-gray-600 italic">🖋️ {{ just.justification }}</div>
+                {% endif %}
+              {% endfor %}
+            </div>
+          {% endfor %}
+          <div class="flex justify-between py-2 mt-2 bg-green-custom/10 p-2 rounded-md">
+            <span class="font-semibold text-gray-700">Moyenne Comportement :</span>
+            <span class="font-semibold text-green-custom">{{ evaluation.moyenne_comportement|floatformat:2 }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Management (Responsables) -->
+      {% if user.is_rh or user.is_directeur %}
+      <div>
+        <h4 class="text-lg font-medium text-orange-custom mb-3 border-b border-gray-200 pb-2">
+          Management
+        </h4>
+        <div class="space-y-4 overflow-x-auto">
+          <table class="w-full border-collapse">
+            <tbody>
+              <tr class="border-b border-gray-200">
+                <td class="py-3 px-4 bg-gray-50 font-medium">Leadership :</td>
+                <td class="py-3 px-4">{{ evaluation.leadership }}</td>
+              </tr>
+              <tr class="border-b border-gray-200">
+                <td class="py-3 px-4 bg-gray-50 font-medium">Planification des activités :</td>
+                <td class="py-3 px-4">{{ evaluation.planification }}</td>
+              </tr>
+              <tr class="border-b border-gray-200">
+                <td class="py-3 px-4 bg-gray-50 font-medium">Prise de Décision :</td>
+                <td class="py-3 px-4">{{ evaluation.prise_decision }}</td>
+              </tr>
+              <tr class="border-b border-gray-200">
+                <td class="py-3 px-4 bg-gray-50 font-medium">Résolution de Problèmes :</td>
+                <td class="py-3 px-4">{{ evaluation.resolution_problemes }}</td>
+              </tr>
+              <tr class="border-b border-gray-200">
+                <td class="py-3 px-4 bg-gray-50 font-medium">Travail d’Équipe :</td>
+                <td class="py-3 px-4">{{ evaluation.travail_equipe }}</td>
+              </tr>
+              <tr class="border-b border-gray-200 bg-gray-100">
+                <td class="py-3 px-4 font-medium">Total Notes :</td>
+                <td class="py-3 px-4 font-medium">{{ evaluation.leadership|add:evaluation.planification|add:evaluation.prise_decision|add:evaluation.resolution_problemes|add:evaluation.travail_equipe }}</td>
+              </tr>
+              <tr class="bg-green-custom/10">
+                <td class="py-3 px-4 font-semibold">Moyenne Management :</td>
+                <td class="py-3 px-4 font-semibold text-green-custom">{{ evaluation.moyenne_management|floatformat:2 }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Avis et Commentaires -->
+      <div>
+        <h4 class="text-lg font-medium text-green-custom mb-3 border-b border-gray-200 pb-2">
+          Avis et Commentaires
+        </h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h5 class="font-semibold text-gray-700 mb-2">Avis du Directeur :</h5>
+            <p class="text-gray-600 italic">{% if evaluation.avis_directeur %}{{ evaluation.avis_directeur }}{% else %}<span class="text-gray-400">Aucun avis fourni</span>{% endif %}</p>
+          </div>
+          <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h5 class="font-semibold text-gray-700 mb-2">Avis de l'Agent :</h5>
+            <p class="text-gray-600 italic">{% if evaluation.avis_agent %}{{ evaluation.avis_agent }}{% else %}<span class="text-gray-400">Aucun avis fourni</span>{% endif %}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex justify-center space-x-4">
+        <a href="{% if user.is_rh %}{% url 'dashboard_rh' %}{% elif user.is_directeur %}{% url 'dashboard_directeur' %}{% endif %}" class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600">⬅️ Retour</a>
+        <a href="{% url 'generer_fiche_evaluation_pdf' evaluation.id %}" class="px-6 py-3 bg-green-custom text-white rounded-lg hover:bg-green-custom/90">🖨️ Télécharger la fiche PDF</a>
+        <button onclick="window.print()" class="px-6 py-3 bg-green-custom text-white rounded-lg hover:bg-green-custom/90">🖨️ Imprimer</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

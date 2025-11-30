@@ -1,0 +1,26 @@
+{% extends 'fiches/base.html' %}
+{% block title %}Signature de l'Évaluation - Directeur{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto bg-white shadow-lg rounded-lg p-6">
+    <h2 class="text-2xl font-semibold mb-4 text-center text-blue-700">🖋 Signature de l'Évaluation - Directeur</h2>
+
+    {% if not evaluation.est_signe_agent %}
+        <p class="text-red-600 mb-4 text-center">⚠️ L’agent n’a pas encore signé. Vous ne pouvez pas signer cette fiche.</p>
+    {% else %}
+        {% if request.user.userprofile.signature %}
+            <p class="mb-4">Votre signature enregistrée :</p>
+            <div class="mb-6 text-center">
+                <img src="{{ request.user.userprofile.signature.url }}" alt="Signature" class="inline-block max-w-xs">
+            </div>
+        {% else %}
+            <p class="mb-4 text-red-600">⚠️ Aucune signature trouvée. <a href="{% url 'modifier_profil_directeur' %}" class="underline text-blue-600">Ajoutez une signature</a> dans votre profil.</p>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">Signer l'Évaluation</button>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}

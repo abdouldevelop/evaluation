@@ -1,0 +1,116 @@
+{% extends 'fiches/base.html' %}
+{% load static %}
+
+{% block title %}
+  Évaluation de {{ agent.nom }} – Semestre {{ semestre }}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-6 space-y-6">
+  <div class="bg-green-custom text-white text-center py-4 rounded-t-lg">
+    <h3 class="text-xl font-semibold">Évaluation – {{ agent.nom }} {{ agent.prenoms }}</h3>
+  </div>
+  <div class="bg-white p-6 rounded-b-lg shadow">
+    <form method="post" id="evaluationForm">
+      {% csrf_token %}
+      {# Champs cachés (annee, semestre, type_personnel) #}
+      {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+
+      {# Erreurs non_field #}
+      {% if form.non_field_errors %}
+        <div class="bg-red-100 border border-red-400 text-red-700 p-4 mb-6 rounded">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      {# Boucle sur vos critères #}
+      <table class="w-full border-collapse mb-6">
+        <thead>
+          <tr class="bg-green-custom text-white">
+            <th class="px-4 py-2 text-left">Critère</th>
+            <th class="px-4 py-2 text-left w-32">Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in champs %}
+            <tr class="border-b hover:bg-gray-50">
+              <td class="px-4 py-2">{{ c.label }}</td>
+              <td class="px-4 py-2">
+                {{ c.field }}
+                <div id="justif_{{ c.field.id_for_label }}" class="hidden mt-1">
+                  <textarea
+                    name="{{ c.field.html_name }}_justif"
+                    rows="2"
+                    class="w-full border rounded"
+                    placeholder="Justification (note 1 ou 5)…"
+                  >{{ c.justif }}</textarea>
+                </div>
+                {% for err in c.field.errors %}
+                  <p class="text-red-600 text-sm">{{ err }}</p>
+                {% endfor %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      {# Avis du Sous-Directeur #}
+      <div class="mb-6">
+        {{ form.avis_sous_directeur.label_tag }}
+        {{ form.avis_sous_directeur }}
+        {% for err in form.avis_sous_directeur.errors %}
+          <p class="text-red-600 text-sm">{{ err }}</p>
+        {% endfor %}
+      </div>
+
+      {# Boutons #}
+      <div class="flex justify-between">
+        <a href="{% url 'dashboard_sous_directeur' %}"
+           class="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+          ← Retour
+        </a>
+        <button type="submit"
+                class="px-6 py-2 bg-green-custom text-white rounded hover:bg-green-custom/90">
+          ✅ Enregistrer
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+    document.getElementById('avis_directeur').addEventListener('input', function(e) {
+        const forbiddenChars = /[@/#&"#~{[|``:+°)0-9;*ù^()§_?=*$<>\\]/g;
+        this.value = this.value.replace(forbiddenChars, '');
+    });
+</script>
+
+<!-- 🔹 Scripts de style pour les champs Django avec Tailwind -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Appliquer Tailwind CSS aux champs de formulaire
+        const textInputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="date"], input[type="number"], select');
+        textInputs.forEach(input => {
+            input.classList.add('w-full', 'px-3', 'py-2', 'border', 'border-gray-300', 'rounded-md', 'shadow-sm', 'focus:outline-none', 'focus:ring-2', 'focus:ring-orange-custom', 'focus:border-orange-custom');
+        });
+
+        // Style spécifique pour les textareas
+        const textareas = document.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+            textarea.classList.add('w-full', 'px-3', 'py-2', 'border', 'border-gray-300', 'rounded-md', 'shadow-sm', 'focus:outline-none', 'focus:ring-2', 'focus:ring-orange-custom', 'focus:border-orange-custom', 'h-32');
+        });
+    });
+</script>
+<script>
+// Montre/masque la justification quand la note est 1 ou 5
+document.querySelectorAll('#evaluationForm select').forEach(function(sel){
+  const justif = document.getElementById('justif_' + sel.id);
+  function toggle(){
+    if (sel.value==='1' || sel.value==='5') justif.classList.remove('hidden');
+    else { justif.classList.add('hidden'); justif.querySelector('textarea').value=''; }
+  }
+  sel.addEventListener('change', toggle);
+  toggle();
+});
+</script>
+{% endblock %}

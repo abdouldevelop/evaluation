@@ -1,0 +1,29 @@
+{% extends 'fiches/base.html' %}
+
+{% block title %}Ajouter un Agent{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">🆕 Ajouter un Agent</h2>
+
+    {% if messages %}
+        <div class="alert alert-success">
+            {% for message in messages %}
+                {{ message }}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="card shadow p-4">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-success">✅ Ajouter</button>
+                <a href="{% url 'dashboard_rh' %}" class="btn btn-secondary">⬅ Retour</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,128 @@
+{% load static %} <!-- ✅ Charge les fichiers statiques de Django -->
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Mon Application{% endblock %}</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configuration des couleurs personnalisées -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'orange-custom': '#ea9113',
+                        'green-custom': '#4c6559',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <nav class="bg-green-custom shadow-lg fixed w-full top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between h-16 items-center">
+        <div>
+            <a href="{% url 'dashboard_agent' %}">
+              <img src="{% static 'images/logo_secondaire.jpeg' %}" alt="ANStat Logo"
+                class="h-12 w-15 mr-3 inline"/>
+            </a>
+        </div>
+
+        {% if user.is_authenticated %}
+          <div class="space-x-4">
+
+            {# === Agent peut aller sur son dashboard, sauf s’il y est déjà === #}
+            {% if user.is_agent and not user.is_directeur_general and request.resolver_match.url_name != 'dashboard_agent' %}
+              <a href="{% url 'dashboard_agent' %}"
+                class="text-white hover:bg-green-custom/80 px-3 py-2 rounded-md text-sm font-medium">
+                Mon Évaluation
+              </a>
+            {% endif %}
+
+
+            {# === Chef de service === #}
+            {% if user.is_chef_service and request.resolver_match.url_name != 'dashboard_chef_service' %}
+              <a href="{% url 'dashboard_chef_service' %}"
+                class="text-white hover:bg-green-custom/80 px-3 py-2 rounded-md text-sm font-medium">
+                Tableau Chef de Service
+              </a>
+            {% endif %}
+
+            {# === Sous‑directeur === #}
+            {% if user.is_sous_directeur and request.resolver_match.url_name != 'dashboard_sous_directeur' %}
+              <a href="{% url 'dashboard_sous_directeur' %}"
+                class="text-white hover:bg-green-custom/80 px-3 py-2 rounded-md text-sm font-medium">
+                Tableau Sous‑Directeur
+              </a>
+            {% endif %}
+
+            {# === Directeur === #}
+            {% if user.is_directeur and request.resolver_match.url_name != 'dashboard_directeur' %}
+              <a href="{% url 'dashboard_directeur' %}"
+                class="text-white hover:bg-green-custom/80 px-3 py-2 rounded-md text-sm font-medium">
+                Tableau Directeur
+              </a>
+            {% endif %}
+
+            {# === Directeur Général === #}
+            {% if user.is_directeur_general and request.resolver_match.url_name != 'dashboard_directeur_general' %}
+              <a href="{% url 'dashboard_dg' %}"
+                class="text-white hover:bg-green-custom/80 px-3 py-2 rounded-md text-sm font-medium">
+                Tableau DG
+              </a>
+            {% endif %}
+ 
+            {# === RH (si vous avez un dashboard RH) === #}
+            {% if user.is_rh and request.resolver_match.url_name != 'dashboard_rh' %}
+              <a href="{% url 'dashboard_rh' %}"
+                class="text-white hover:bg-green-custom/80 px-3 py-2 rounded-md text-sm font-medium">
+                Tableau RH
+              </a>
+            {% endif %}
+
+            {# === Toujours proposer la déconnexion === #}
+            <form method="post" action="{% url 'logout' %}" class="inline">
+              {% csrf_token %}
+              <button type="submit"
+                      class="bg-orange-custom hover:bg-orange-custom/90 text-white px-3 py-2 rounded-md text-sm font-medium">
+                Se déconnecter
+              </button>
+            </form>
+          </div>
+        {% endif %}
+      </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 mt-16">
+        {# ──────────── Bloc d’affichage des messages Django ──────────── #}
+        {% if messages %}
+          <div class="mb-6">
+            {% for message in messages %}
+              <div
+                class="mb-4 px-4 py-2 rounded
+                  {% if message.tags == 'error' %}bg-red-100 border-l-4 border-red-500 text-red-700{% endif %}
+                  {% if message.tags == 'warning' %}bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700{% endif %}
+                  {% if message.tags == 'success' %}bg-green-100 border-l-4 border-green-500 text-green-700{% endif %}
+                ">
+                {{ message }}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+        {# ────────────────────────────────────────────────────────────── #}
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        // JavaScript pour le menu mobile
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

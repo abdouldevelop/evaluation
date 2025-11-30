@@ -1,0 +1,158 @@
+{% extends 'fiches/base.html' %}
+{% load custom_filters %}
+{% load static %}
+
+{% block title %}Tableau de Bord - Sous-Directeur{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+  <div class="flex flex-col sm:flex-row items-center justify-between mb-8">
+    <div class="order-2 sm:order-1 text-center sm:text-left mt-4 sm:mt-0">
+      <h2 class="text-3xl font-bold text-gray-800">Bienvenue, {{ user.get_full_name }}</h2>
+      <p class="text-gray-600 mt-1">Vous êtes connecté en tant que <span class="font-semibold">Sous-Directeur</span>.</p>
+    </div>
+    <div class="order-1 sm:order-2 flex space-x-4">
+      <a href="{% url 'modifier_mot_de_passe' %}" class="px-4 py-2 bg-green-900 text-white rounded-lg shadow-md text-sm hover:bg-orange-600 transition-colors duration-150">
+        🔐 Modifier mon mot de passe
+      </a>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+    <div class="bg-gray-200 text-gray-800 py-4 px-6">
+      <h3 class="text-xl font-semibold text-center">📋 Tableau de Bord du Sous-Directeur</h3>
+    </div>
+    <div class="max-w-7xl mx-auto p-6">
+      <!-- filtre service -->
+      <form method="get" class="mb-6">
+        <label for="service" class="mr-2 font-medium">Filtrer par service :</label>
+        <select name="service" id="service" class="border rounded p-2">
+          <option value="">-- Tous les services --</option>
+          {% for svc in services %}
+            <option value="{{ svc.service__id  }}" {% if svc.service__id|stringformat:"s" == selected_service %}selected{% endif %}>
+              {{ svc.service__nom }}
+            </option>
+          {% endfor %}
+        </select>
+        <button type="submit"
+            class="ml-3 bg-green-900 text-white px-4 py-2 rounded hover:bg-orange-600 transition-colors duration-150">
+          Filtrer
+        </button>
+      </form>
+
+      <!-- onglets -->
+      <div class="border-b border-gray-200 mb-4">
+        <nav class="flex -mb-px">
+          <button class="tab-button w-1/2 py-4 px-1 text-center border-b-2 border-orange-custom text-orange-custom font-medium text-sm" data-tab="evaluer-agents">
+            📝 Évaluer les Agents
+          </button>
+          <button class="tab-button w-1/2 py-4 px-1 text-center border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="evaluer-responsables">
+            📋 Évaluer les Responsables
+          </button>
+        </nav>
+      </div>
+
+      <!-- contenu onglets -->
+      <div id="evaluer-agents" class="tab-content">
+        <div class="overflow-x-auto">
+          <table class="w-full border-collapse">
+            <thead>
+              <tr class="bg-gray-200 text-gray-900">
+                <th class="py-3 px-4 text-left font-semibold">Matricule</th>
+                <th class="py-3 px-4 text-left font-semibold">Nom</th>
+                <th class="py-3 px-4 text-left font-semibold">Service</th>
+                <th class="py-3 px-4 text-center font-semibold">Évaluer</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for agent in agents %}
+                <tr class="border-b hover:bg-gray-50">
+                  <td class="py-3 px-4">{{ agent.matricule }}</td>
+                  <td class="py-3 px-4">{{ agent.nom }} {{ agent.prenoms }}</td>
+                  <td class="py-3 px-4">{{ agent.service.nom }}</td>
+                  <td class="py-3 px-4 text-center">
+                    {% if agent.id in completed_ids %}
+                      <button class="px-3 py-1 bg-gray-400 text-white text-sm rounded cursor-not-allowed opacity-70"
+                          disabled title="Déjà évalué">
+                      🖋️ Évaluer
+                      </button>
+                    {% else %}
+                      <a href="{% url 'evaluer_agent_sous_directeur' agent.id %}"
+                        class="px-3 py-1 bg-green-900 text-white text-sm rounded hover:bg-green-800 inline-flex items-center justify-center">
+                        🖋️ Évaluer
+                      </a>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="py-8 text-center text-gray-500">Aucun agent trouvé.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="evaluer-responsables" class="tab-content hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full border-collapse">
+            <thead>
+              <tr class="bg-gray-200 text-gray-900">
+                <th class="py-3 px-4 text-left font-semibold">Matricule</th>
+                <th class="py-3 px-4 text-left font-semibold">Nom</th>
+                <th class="py-3 px-4 text-left font-semibold">Service</th>
+                <th class="py-3 px-4 text-center font-semibold">Évaluer</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for responsable in responsables %}
+                <tr class="border-b hover:bg-gray-50">
+                  <td class="py-3 px-4">{{ responsable.matricule }}</td>
+                  <td class="py-3 px-4">{{ responsable.nom }} {{ responsable.prenoms }}</td>
+                  <td class="py-3 px-4">{{ responsable.service.nom }}</td>
+                  <td class="py-3 px-4 text-center">
+                    <a href="{% url 'evaluer_responsable_sous_directeur' responsable.id %}?semestre={{ semestre }}" class="inline-flex items-center justify-center px-3 py-1 bg-green-900 text-white text-sm rounded hover:bg-green-800">
+                      🖋️ Évaluer
+                    </a>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="py-8 text-center text-gray-500">Aucun responsable trouvé.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- JS onglets -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // reset styles
+        tabButtons.forEach(b=> {
+          b.classList.remove('border-orange-custom','text-orange-custom');
+          b.classList.add('border-transparent','text-gray-500');
+        });
+        // activate clicked
+        btn.classList.remove('border-transparent','text-gray-500');
+        btn.classList.add('border-orange-custom','text-orange-custom');
+        // show/hide
+        tabContents.forEach(c=> c.classList.add('hidden'));
+        document.getElementById(btn.getAttribute('data-tab')).classList.remove('hidden');
+      });
+    });
+    // démarrer sur le premier onglet
+    tabButtons[0].click();
+  });
+</script>
+{% endblock %}

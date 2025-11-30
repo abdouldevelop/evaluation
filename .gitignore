@@ -1,0 +1,36 @@
+# Environnement virtuel
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+media/
+
+# Fichiers sensibles
+.env
+*.env
+secrets.py
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Static files (collectstatic)
+staticfiles/
+
+# OS
+.DS_Store
+Thumbs.db

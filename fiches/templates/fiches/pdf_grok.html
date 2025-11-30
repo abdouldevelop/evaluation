@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fiche d'Évaluation des Agents</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header-left, .header-center, .header-right {
+            text-align: center;
+        }
+
+        .header-left img {
+            max-width: 150px; /* Adjust size as needed */
+            height: auto;
+        }
+
+        .header-center img {
+            max-width: 200px; /* Adjust size as needed */
+            height: auto;
+        }
+
+        .header-right {
+            font-weight: bold;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.5em;
+            text-transform: uppercase;
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 1.2em;
+        }
+
+        h3 {
+            font-size: 1.1em;
+            text-transform: uppercase;
+            margin-top: 20px;
+        }
+
+        h4 {
+            font-size: 1em;
+            margin-top: 15px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        table td, table th {
+            border: 1px solid #000;
+            padding: 8px;
+        }
+
+        .evaluation-table th, .final-note th {
+            background-color: #f2f2f2;
+        }
+
+        textarea {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        ul li {
+            margin: 5px 0;
+        }
+
+        .other-decision {
+            width: 70%;
+            margin-left: 10px;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+        }
+
+        footer img {
+            max-width: 800px; /* Adjust size as needed */
+            width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-left">
+                    <img src="{% static 'images/entete.png' %}" alt="ANStat Logo" class="h-12 w-15 mr-3">
+            </div>
+        </header>
+
+        <h1>FICHE D’ÉVALUATION DES AGENTS</h1>
+        <h2>ANNÉE 2024 (Semestre 2)</h2>
+
+        <section class="section">
+            <h3>IDENTIFICATION DU SALARIÉ</h3>
+            <p>(À renseigner par le Service du Personnel)</p>
+            <table>
+                <tr><td>Nom et Prénoms :</td><td></td></tr>
+                <tr><td>Matricule :</td><td></td></tr>
+                <tr><td>Date d’embauche :</td><td></td></tr>
+                <tr><td>Catégorie :</td><td></td></tr>
+                <tr><td>Direction :</td><td></td></tr>
+                <tr><td>Sous-Direction :</td><td></td></tr>
+                <tr><td>Service :</td><td></td></tr>
+            </table>
+        </section>
+
+        <section class="section">
+            <h3>IDENTIFICATION DU POSTE DU SALARIÉ</h3>
+            <p>(À renseigner par le titulaire du poste)</p>
+            <table>
+                <tr><td>Poste :</td><td></td></tr>
+                <tr><td>Tenu depuis le :</td><td></td></tr>
+            </table>
+        </section>
+
+        <section class="section">
+            <h3>ÉVALUATION DU RENDEMENT ET DU COMPORTEMENT</h3>
+            <p>L’évaluateur dispose des standards de notation définis comme suit :</p>
+            <p>1 = Très insuffisant, 2 = Insuffisant, 3 = Assez Bon, 4 = Bon, 5 = Très Bon</p>
+
+            <h4>Évaluation du rendement</h4>
+            <table class="evaluation-table">
+                <thead>
+                    <tr><th>Critères de rendement</th><th>Notation du Directeur ou du Responsable de structure</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Connaissances et aptitudes professionnelles</td><td></td></tr>
+                    <tr><td>Esprit d’initiative</td><td></td></tr>
+                    <tr><td>Puissance du travail et rendement</td><td></td></tr>
+                    <tr><td>Respect des objectifs</td><td></td></tr>
+                    <tr><td>Total Notes</td><td></td></tr>
+                    <tr><td>Moyenne (M1) = Total notes / 4</td><td></td></tr>
+                </tbody>
+            </table>
+
+            <h4>Évaluation du Comportement</h4>
+            <table class="evaluation-table">
+                <thead>
+                    <tr><th>Critères de rendement</th><th>Notation du Directeur ou du Responsable de structure</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Civisme, intégrité et moralité</td><td></td></tr>
+                    <tr><td>Sens du service public</td><td></td></tr>
+                    <tr><td>Sens social et sens des relations humaines (Esprit d’équipe)</td><td></td></tr>
+                    <tr><td>Esprit de discipline</td><td></td></tr>
+                    <tr><td>Ponctualité</td><td></td></tr>
+                    <tr><td>Assiduité</td><td></td></tr>
+                    <tr><td>Tenue vestimentaire et présentation</td><td></td></tr>
+                    <tr><td>Total</td><td></td></tr>
+                    <tr><td>Moyenne (M2) = Total notes / 7</td><td></td></tr>
+                </tbody>
+            </table>
+
+            <h4>Note Finale S2 / 5</h4>
+            <table class="final-note">
+                <thead>
+                    <tr><th>Moyennes</th><th>Moyenne / 5</th><th>Coefficient</th><th>Moyenne pondérée (MP)</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Moyenne évaluation du rendement (M1)</td><td></td><td>2</td><td>……………. / 10</td></tr>
+                    <tr><td>Moyenne évaluation du comportement (M2)</td><td></td><td>1</td><td>……………. / 5</td></tr>
+                    <tr><td>Total Moyenne : Somme (MP1+MP2)</td><td></td><td>3</td><td>……………. / 15</td></tr>
+                    <tr><td>Moyenne Générale S2 / 3</td><td colspan="3">……………. / 5</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="section">
+            <h3>Avis du Directeur ou du Responsable de structure</h3>
+            <p>Nom et prénoms :</p>
+            <p>Signature :</p>
+        </section>
+
+        <section class="section">
+            <h3>Avis de l’agent évalué et projet professionnel</h3>
+            <textarea rows="5"></textarea>
+            <p>Date :</p>
+            <p>Signature :</p>
+        </section>
+
+        <section class="section">
+            <h3>Note Finale Annuelle (S1+S2) / 5</h3>
+            <table class="final-note">
+                <thead>
+                    <tr><th>Moyennes semestrielles</th><th>Moyenne / 5</th><th>Coefficient</th><th>Moyenne pondérée Annuelle (MPA)</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Moyenne S1</td><td></td><td>1</td><td>/ 5</td></tr>
+                    <tr><td>Moyenne S2</td><td></td><td>2</td><td>/ 10</td></tr>
+                    <tr><td>Total Moyenne Annuelle : Somme (S1+S2)</td><td></td><td>3</td><td>/ 15</td></tr>
+                    <tr><td>Moyenne Générale Annuelle (S1+S2) / 3</td><td colspan="3">/ 5</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="section">
+            <h3>DÉCISION FINALE DU DIRECTEUR GÉNÉRAL OU SON REPRÉSENTANT</h3>
+            <ul>
+                <li><input type="checkbox"> Formation</li>
+                <li><input type="checkbox"> Promotion</li>
+                <li><input type="checkbox"> Augmentation de salaire (au mérite)</li>
+                <li><input type="checkbox"> Rupture de contrat</li>
+                <li>Autres décisions (à préciser) : <input type="text" class="other-decision"></li>
+            </ul>
+        </section>
+
+        <footer>
+            <img src="{% static 'images/pied.png' %}">
+        </footer>
+    </div>
+</body>
+</html>

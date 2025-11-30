@@ -1,0 +1,749 @@
+{% extends 'fiches/base.html' %}
+{% load static %}
+{% load evaluation_filters %}
+{% load dict_extras %}
+
+{% block title %}Tableau de Bord - Directeur Général{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ========================================
+       🎨 VARIABLES CSS - CHARTE GRAPHIQUE
+       ======================================== */
+    :root {
+        --primary: #4c6559;
+        --primary-dark: #3a4f44;
+        --primary-light: #7a9882;
+        --secondary: #eea12e;
+        --secondary-dark: #d89125;
+        --secondary-light: #f5b858;
+    }
+
+    /* ========================================
+       ✨ ANIMATIONS KEYFRAMES
+       ======================================== */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+    }
+
+    @keyframes shimmer {
+        0% {
+            background-position: -1000px 0;
+        }
+        100% {
+            background-position: 1000px 0;
+        }
+    }
+
+    /* Classes d'animation */
+    .animate-fadeIn {
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    .animate-slideInLeft {
+        animation: slideInLeft 0.5s ease-out;
+    }
+
+    .animate-slideInRight {
+        animation: slideInRight 0.5s ease-out;
+    }
+
+    .animate-scaleIn {
+        animation: scaleIn 0.4s ease-out;
+    }
+
+    .animate-pulse-slow {
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    /* Stagger animation */
+    .stagger-item {
+        opacity: 0;
+        animation: fadeIn 0.4s ease-out forwards;
+    }
+
+    .stagger-item:nth-child(1) { animation-delay: 0.05s; }
+    .stagger-item:nth-child(2) { animation-delay: 0.10s; }
+    .stagger-item:nth-child(3) { animation-delay: 0.15s; }
+    .stagger-item:nth-child(4) { animation-delay: 0.20s; }
+    .stagger-item:nth-child(5) { animation-delay: 0.25s; }
+
+    /* ========================================
+       🎨 EFFETS HOVER
+       ======================================== */
+    .table-row-hover {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+    }
+
+    .table-row-hover:hover {
+        background: linear-gradient(to right, rgba(238, 161, 46, 0.05), transparent);
+        transform: translateX(3px);
+        box-shadow: -3px 0 0 0 var(--secondary);
+    }
+
+    .card-hover {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .card-hover:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(76, 101, 89, 0.15);
+    }
+
+    .btn-hover {
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-hover::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+
+    .btn-hover:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+
+    .btn-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(76, 101, 89, 0.2);
+    }
+
+    /* ========================================
+       🎨 COMPOSANTS PERSONNALISÉS
+       ======================================== */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .bg-gradient-custom {
+        background: linear-gradient(135deg, #f8faf9 0%, #ffffff 50%, #f0f5f2 100%);
+    }
+
+    .badge-animated {
+        transition: all 0.3s ease;
+    }
+
+    .badge-animated:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(238, 161, 46, 0.3);
+    }
+
+    /* Scrollbar personnalisée */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: var(--primary);
+        border-radius: 10px;
+        transition: background 0.3s ease;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: var(--primary-dark);
+    }
+
+    .transition-smooth {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Tab active effect */
+    .tab-active {
+        border-color: var(--secondary) !important;
+        color: var(--secondary) !important;
+        background: linear-gradient(to top, rgba(238, 161, 46, 0.05), transparent);
+    }
+
+    /* Crown effect for DG */
+    .crown-pulse {
+        animation: crownPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes crownPulse {
+        0%, 100% {
+            transform: scale(1) rotate(0deg);
+            filter: drop-shadow(0 0 5px rgba(238, 161, 46, 0.5));
+        }
+        50% {
+            transform: scale(1.1) rotate(5deg);
+            filter: drop-shadow(0 0 15px rgba(238, 161, 46, 0.8));
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-custom py-8 animate-fadeIn">
+    <div class="max-w-7xl mx-auto px-4">
+        <!-- 👑 En-tête Premium DG -->
+        <div class="flex flex-col sm:flex-row items-center justify-between mb-10 animate-slideInLeft">
+            <div class="order-2 sm:order-1 text-center sm:text-left mt-4 sm:mt-0">
+                <!-- Couronne DG -->
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-[#eea12e] to-[#d89125] rounded-full mb-4 shadow-xl crown-pulse">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[#4c6559] to-[#3a4f44] bg-clip-text text-transparent mb-2">
+                    Bienvenue, M. le Directeur Général
+                </h2>
+                <p class="text-gray-600 text-lg flex items-center justify-center sm:justify-start">
+                    <svg class="w-5 h-5 mr-2 text-[#eea12e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                    <span>Compte <span class="font-semibold text-[#4c6559]">Directeur Général</span></span>
+                </p>
+            </div>
+            
+            <!-- Boutons d'action -->
+            <div class="order-1 sm:order-2 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 animate-slideInRight">
+                <a href="{% url 'modifier_mot_de_passe' %}" class="btn-hover flex items-center justify-center px-6 py-3 bg-gradient-to-r from-[#4c6559] to-[#3a4f44] text-white rounded-lg shadow-md text-sm hover:from-[#3a4f44] hover:to-[#4c6559] transition-smooth">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                    Modifier mot de passe
+                </a>
+                <a href="{% url 'gerer_signature' %}" class="btn-hover flex items-center justify-center px-6 py-3 bg-gradient-to-r from-[#eea12e] to-[#d89125] text-white rounded-lg shadow-md text-sm hover:from-[#d89125] hover:to-[#eea12e] transition-smooth">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                    </svg>
+                    Gérer ma signature
+                </a>
+            </div>
+        </div>
+
+        <!-- 🔍 Section Filtres -->
+        <div class="glass-card rounded-2xl shadow-xl p-8 mb-10 card-hover animate-scaleIn">
+            <h3 class="text-xl font-semibold text-[#4c6559] mb-6 flex items-center">
+                <svg class="w-6 h-6 mr-3 text-[#eea12e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                </svg>
+                Filtres de Recherche
+            </h3>
+            <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="stagger-item">
+                    <label for="directionFilter" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-[#4c6559]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                        Direction
+                    </label>
+                    <select id="directionFilter" name="direction" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559] text-gray-800 transition-smooth">
+                        <option value="all" {% if direction_filter == 'all' %}selected{% endif %}>Toutes les Directions</option>
+                        {% for direction in directions %}
+                            <option value="{{ direction.id }}" {% if direction_filter == direction.id|stringformat:"s" %}selected{% endif %}>{{ direction.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="stagger-item">
+                    <label for="anneeFilter" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-[#4c6559]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        Année
+                    </label>
+                    <select id="anneeFilter" name="annee" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559] text-gray-800 transition-smooth">
+                        <option value="" {% if not annee_filter %}selected{% endif %}>Toutes les Années</option>
+                        {% for annee in annees %}
+                            <option value="{{ annee }}" {% if annee_filter == annee|stringformat:"s" %}selected{% endif %}>{{ annee }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="stagger-item">
+                    <label for="semestreFilter" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-[#4c6559]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Semestre
+                    </label>
+                    <select name="semestre" id="semestreFilter">
+                        <option value="">Tous les Semestres</option>
+                        {% for value, label in semestres %}
+                            <option value="{{ value }}" {% if semestre_filter == value|stringformat:"s" %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+        </div>
+
+        <!-- 📊 Bouton Suivi -->
+        <div class="text-center mb-10 animate-scaleIn">
+            <a href="{% url 'dashboard_stats' %}" class="btn-hover inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-[#eea12e] to-[#d89125] text-white rounded-xl shadow-lg text-lg font-semibold hover:from-[#d89125] hover:to-[#eea12e] transition-smooth">
+                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                Suivi des Évaluations
+            </a>
+        </div>
+
+        <!-- 📊 Card principale des onglets -->
+        <div class="glass-card rounded-2xl shadow-xl overflow-hidden card-hover animate-scaleIn">
+            <!-- En-tête -->
+            <div class="bg-gradient-to-r from-[#4c6559] to-[#3a4f44] text-white py-5 px-6">
+                <h3 class="text-2xl font-semibold text-center flex items-center justify-center">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                    </svg>
+                    Tableau de Bord Directeur Général
+                </h3>
+            </div>
+
+            <!-- Navigation onglets -->
+            <div class="border-b-2 border-gray-200">
+                <nav class="flex flex-wrap -mb-px">
+                    <button class="tab-button stagger-item flex-1 py-4 px-4 text-center border-b-2 font-semibold text-sm transition-smooth focus:outline-none tab-active" data-tab="evaluer-responsables">
+                        <span class="flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                            </svg>
+                            <span class="hidden sm:inline">Évaluer Directeur</span>
+                            <span class="sm:hidden">Directeur</span>
+                        </span>
+                    </button>
+                    <button class="tab-button stagger-item flex-1 py-4 px-4 text-center border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-[#4c6559] hover:border-gray-300 transition-smooth focus:outline-none" data-tab="evaluations-agent">
+                        <span class="flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                            </svg>
+                            <span class="hidden sm:inline">Évaluations Agents</span>
+                            <span class="sm:hidden">Agents</span>
+                        </span>
+                    </button>
+                    <button class="tab-button stagger-item flex-1 py-4 px-4 text-center border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-[#4c6559] hover:border-gray-300 transition-smooth focus:outline-none" data-tab="evaluations-responsable">
+                        <span class="flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                            <span class="hidden sm:inline">Évaluations Responsables</span>
+                            <span class="sm:hidden">Responsables</span>
+                        </span>
+                    </button>
+                    <button class="tab-button stagger-item flex-1 py-4 px-4 text-center border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-[#4c6559] hover:border-gray-300 transition-smooth focus:outline-none" data-tab="classement-direction">
+                        <span class="flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            </svg>
+                            <span class="hidden sm:inline">Classement Direction</span>
+                            <span class="sm:hidden">Classement</span>
+                        </span>
+                    </button>
+                    <button class="tab-button stagger-item flex-1 py-4 px-4 text-center border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-[#4c6559] hover:border-gray-300 transition-smooth focus:outline-none" data-tab="evaluations-a-signer">
+                        <span class="flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <span class="hidden sm:inline">À Signer</span>
+                            <span class="sm:hidden">Signer</span>
+                        </span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Contenu des onglets -->
+            <div class="p-6">
+                <!-- ONGLET 1: Évaluer Directeur -->
+                <div id="evaluer-responsables" class="tab-content">
+                    <h3 class="text-2xl font-semibold text-[#4c6559] mb-6 flex items-center">
+                        <svg class="w-6 h-6 mr-3 text-[#eea12e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                        Évaluer les Directeurs
+                    </h3>
+                    <div class="overflow-x-auto custom-scrollbar rounded-xl border-2 border-gray-200 shadow-sm">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gradient-to-r from-gray-100 to-gray-50">
+                                    <th class="py-4 px-6 text-left font-semibold text-gray-700 border-b-2 border-gray-200">Matricule</th>
+                                    <th class="py-4 px-6 text-left font-semibold text-gray-700 border-b-2 border-gray-200">Directeur</th>
+                                    <th class="py-4 px-6 text-left font-semibold text-gray-700 border-b-2 border-gray-200">Direction</th>
+                                    <th class="py-4 px-6 text-center font-semibold text-gray-700 border-b-2 border-gray-200">Semestre</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for directeur in directeurs %}
+                                <tr class="border-b border-gray-100 table-row-hover">
+                                    <td class="py-4 px-6 font-medium text-gray-800">{{ directeur.matricule }}</td>
+                                    <td class="py-4 px-6 text-gray-700">{{ directeur.nom }} {{ directeur.prenoms }}</td>
+                                    <td class="py-4 px-6 text-gray-600">{{ directeur.direction.nom }}</td>
+                                    <td class="py-4 px-6 text-center">
+                                        {% with ev=evaluations_data|get_item:directeur.id|get_item:'s1' %}
+                                            {% if ev %}
+                                                {% if ev.est_signe_dg %}
+                                                    <button disabled class="inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-gray-400 to-gray-500 text-white text-sm rounded-lg cursor-not-allowed opacity-60 shadow-sm">
+                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                        </svg>
+                                                        Signé
+                                                    </button>
+                                                {% else %}
+                                                    <a href="{% url 'evaluer_directeur' directeur.id %}?semestre=1" class="btn-hover inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-[#eea12e] to-[#d89125] text-white text-sm rounded-lg hover:from-[#d89125] hover:to-[#eea12e] transition-smooth shadow-sm">
+                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                        </svg>
+                                                        Modifier
+                                                    </a>
+                                                {% endif %}
+                                            {% else %}
+                                                <a href="{% url 'evaluer_directeur' directeur.id %}?semestre=1" class="btn-hover inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-[#4c6559] to-[#3a4f44] text-white text-sm rounded-lg hover:from-[#3a4f44] hover:to-[#4c6559] transition-smooth shadow-sm">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                    </svg>
+                                                    Évaluer
+                                                </a>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="py-12 text-center text-gray-500">
+                                        <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                                        </svg>
+                                        <p class="text-lg">Aucun directeur trouvé.</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ONGLET 2: Évaluations Agents (contenu simplifié pour l'exemple) -->
+                <div id="evaluations-agent" class="tab-content hidden">
+                    <h3 class="text-2xl font-semibold text-[#4c6559] mb-6 flex items-center">
+                        <svg class="w-6 h-6 mr-3 text-[#eea12e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                        Évaluations des Agents
+                    </h3>
+                    <div class="overflow-x-auto custom-scrollbar rounded-xl border-2 border-gray-200 shadow-sm">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gradient-to-r from-gray-100 to-gray-50">
+                                    <th class="py-4 px-6 text-left font-semibold text-gray-700 border-b-2 border-gray-200">Matricule</th>
+                                    <th class="py-4 px-6 text-left font-semibold text-gray-700 border-b-2 border-gray-200">Agent</th>
+                                    <th class="py-4 px-6 text-left font-semibold text-gray-700 border-b-2 border-gray-200">Direction</th>
+                                    <th class="py-4 px-6 text-center font-semibold text-gray-700 border-b-2 border-gray-200">Moyenne</th>
+                                    <th class="py-4 px-6 text-center font-semibold text-gray-700 border-b-2 border-gray-200">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for eval in evaluations_agents %}
+                                <tr class="border-b border-gray-100 table-row-hover">
+                                    <td class="py-4 px-6 font-medium text-gray-800">{{ eval.agent.matricule }}</td>
+                                    <td class="py-4 px-6 text-gray-700">{{ eval.agent.nom }} {{ eval.agent.prenoms }}</td>
+                                    <td class="py-4 px-6 text-gray-600">{{ eval.agent.direction.nom }}</td>
+                                    <td class="py-4 px-6 text-center">
+                                        <span class="inline-block py-2 px-4 rounded-full font-bold badge-animated {% if eval.moyenne_generale >= 3 %}bg-green-100 text-green-800{% elif eval.moyenne_generale >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                            {{ eval.moyenne_generale|floatformat:2 }} / 5
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-6 text-center">
+                                        <a href="{% url 'details_evaluation' eval.id %}" class="btn-hover inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm rounded-lg hover:from-blue-600 hover:to-blue-700 transition-smooth shadow-sm">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            </svg>
+                                            Détails
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="py-12 text-center text-gray-500">
+                                        <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                                        </svg>
+                                        <p class="text-lg">Aucune évaluation d'agent trouvée.</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ONGLET 3: Évaluations Responsables -->
+                <div id="evaluations-responsable" class="tab-content hidden">
+                    <h3 class="text-2xl font-semibold text-[#4c6559] mb-6 flex items-center">
+                        <svg class="w-6 h-6 mr-3 text-[#eea12e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                        Évaluations des Responsables
+                    </h3>
+                    <div class="overflow-x-auto custom-scrollbar rounded-xl border-2 border-gray-200 shadow-sm">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gradient-to-r from-gray-100 to-gray-50">
+                                    <th class="py-4 px-6 text-left font-semibold text-gray-700 border-b-2 border-gray-200">Matricule</th>
+                                    <th class="py-4 px-6 text-left font-semibold text-gray-700 border-b-2 border-gray-200">Responsable</th>
+                                    <th class="py-4 px-6 text-left font-semibold text-gray-700 border-b-2 border-gray-200">Direction</th>
+                                    <th class="py-4 px-6 text-center font-semibold text-gray-700 border-b-2 border-gray-200">Moyenne</th>
+                                    <th class="py-4 px-6 text-center font-semibold text-gray-700 border-b-2 border-gray-200">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for eval in evaluations_responsables %}
+                                <tr class="border-b border-gray-100 table-row-hover">
+                                    <td class="py-4 px-6 font-medium text-gray-800">{{ eval.agent.matricule }}</td>
+                                    <td class="py-4 px-6 text-gray-700">{{ eval.agent.nom }} {{ eval.agent.prenoms }}</td>
+                                    <td class="py-4 px-6 text-gray-600">{{ eval.agent.direction.nom }}</td>
+                                    <td class="py-4 px-6 text-center">
+                                        <span class="inline-block py-2 px-4 rounded-full font-bold badge-animated {% if eval.moyenne_generale >= 3 %}bg-green-100 text-green-800{% elif eval.moyenne_generale >= 2 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                            {{ eval.stat.moyenne_generale|floatformat:2 }} / 5
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-6 text-center">
+                                        <a href="{% url 'details_evaluation' eval.id %}" class="btn-hover inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm rounded-lg hover:from-blue-600 hover:to-blue-700 transition-smooth shadow-sm">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            </svg>
+                                            Détails
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="py-12 text-center text-gray-500">
+                                        <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                                        </svg>
+                                        <p class="text-lg">Aucune évaluation de responsable trouvée.</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ONGLET 4: Classement par Direction -->
+                <div id="classement-direction" class="tab-content hidden">
+                    <h3 class="text-2xl font-semibold text-[#4c6559] mb-6 flex items-center">
+                        <svg class="w-6 h-6 mr-3 text-[#eea12e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                        </svg>
+                        Classement par Direction
+                    </h3>
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+                        <div class="flex items-start">
+                            <svg class="w-5 h-5 text-blue-500 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div>
+                                <p class="text-sm font-medium text-blue-800">Information</p>
+                                <p class="text-sm text-blue-700 mt-1">Utilisez le filtre "Direction" pour afficher le classement d'une direction spécifique.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ONGLET 5: Évaluations à signer -->
+                <div id="evaluations-a-signer" class="tab-content hidden">
+                    <h3 class="text-2xl font-semibold text-[#4c6559] mb-6 flex items-center">
+                        <svg class="w-6 h-6 mr-3 text-[#eea12e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                        </svg>
+                        Évaluations à Signer
+                    </h3>
+                    <div class="overflow-x-auto custom-scrollbar rounded-xl border-2 border-gray-200 shadow-sm">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gradient-to-r from-gray-100 to-gray-50">
+                                    <th class="py-4 px-6 text-left font-semibold text-gray-700 border-b-2 border-gray-200">Agent</th>
+                                    <th class="py-4 px-6 text-left font-semibold text-gray-700 border-b-2 border-gray-200">Année</th>
+                                    <th class="py-4 px-6 text-left font-semibold text-gray-700 border-b-2 border-gray-200">Semestre</th>
+                                    <th class="py-4 px-6 text-center font-semibold text-gray-700 border-b-2 border-gray-200">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for evaluation in evaluations_a_signer %}
+                                <tr class="border-b border-gray-100 table-row-hover">
+                                    <td class="py-4 px-6 text-gray-700">{{ evaluation.agent.nom }} {{ evaluation.agent.prenoms }}</td>
+                                    <td class="py-4 px-6 text-gray-600">{{ evaluation.annee }}</td>
+                                    <td class="py-4 px-6 text-gray-600">{{ evaluation.semestre }}</td>
+                                    <td class="py-4 px-6 text-center">
+                                        {% if evaluation.signed_by_evaluator and evaluation.decision_finale and not evaluation.est_signe_dg %}
+                                            <form method="post" action="{% url 'signer_evaluation_dg' evaluation.id %}" class="inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn-hover inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-[#eea12e] to-[#d89125] text-white text-sm rounded-lg hover:from-[#d89125] hover:to-[#eea12e] transition-smooth shadow-sm">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                                                    </svg>
+                                                    Signer (DG)
+                                                </button>
+                                            </form>
+                                        {% elif evaluation.est_signe_dg %}
+                                            <span class="inline-flex items-center py-2 px-4 rounded-full bg-green-100 text-green-800 font-medium">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                </svg>
+                                                Déjà signée
+                                            </span>
+                                        {% else %}
+                                            <span class="inline-flex items-center py-2 px-4 rounded-full bg-yellow-100 text-yellow-800 font-medium">
+                                                <svg class="w-4 h-4 mr-1 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
+                                                En attente
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="py-12 text-center text-gray-500">
+                                        <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                        <p class="text-lg">Aucune évaluation à signer.</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // ========================================
+    // 📑 GESTION DES ONGLETS
+    // ========================================
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Retirer les styles actifs
+            tabButtons.forEach(btn => {
+                btn.classList.remove('tab-active', 'border-[#eea12e]', 'text-[#eea12e]');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+
+            // Ajouter styles actifs
+            button.classList.remove('border-transparent', 'text-gray-500');
+            button.classList.add('tab-active');
+
+            // Masquer tout le contenu
+            tabContents.forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            // Afficher le contenu sélectionné
+            const tabId = button.getAttribute('data-tab');
+            const targetContent = document.getElementById(tabId);
+            if (targetContent) {
+                targetContent.classList.remove('hidden');
+                targetContent.style.animation = 'none';
+                setTimeout(() => {
+                    targetContent.style.animation = '';
+                    targetContent.classList.add('animate-fadeIn');
+                }, 10);
+            }
+        });
+    });
+
+    // ========================================
+    // 🔍 FILTRAGE AUTOMATIQUE
+    // ========================================
+    ['directionFilter', 'anneeFilter', 'semestreFilter'].forEach(id => {
+        const filter = document.getElementById(id);
+        if (filter) {
+            filter.addEventListener('change', () => filter.form.submit());
+        }
+    });
+
+    // ========================================
+    // 🎨 STYLE DES INPUTS
+    // ========================================
+    const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="date"], input[type="password"], input[type="number"], textarea');
+    inputs.forEach(input => {
+        if (!input.classList.contains('border-2')) {
+            input.classList.add('w-full', 'px-4', 'py-3', 'border-2', 'border-gray-200', 'rounded-xl', 'shadow-sm', 'focus:outline-none', 'focus:ring-2', 'focus:ring-[#4c6559]', 'focus:border-[#4c6559]', 'text-gray-800', 'transition-smooth');
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,684 @@
+{% extends 'fiches/base.html' %}
+{% load static %}
+
+{% block title %}Évaluation de {{ agent.nom }} - Semestre {{ semestre }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ========================================
+       🎨 VARIABLES CSS - CHARTE GRAPHIQUE
+       ======================================== */
+    :root {
+        --primary: #4c6559;
+        --primary-dark: #3a4f44;
+        --primary-light: #7a9882;
+        --secondary: #eea12e;
+        --secondary-dark: #d89125;
+        --secondary-light: #f5b858;
+    }
+
+    /* ========================================
+       ✨ ANIMATIONS KEYFRAMES
+       ======================================== */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.02);
+        }
+    }
+
+    /* ========================================
+       📄 TITRE PRINCIPAL
+       ======================================== */
+    .main-title {
+        color: var(--primary-dark);
+        animation: fadeInUp 0.6s ease-out;
+        position: relative;
+        padding-bottom: 1rem;
+    }
+
+    .main-title::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100px;
+        height: 4px;
+        background: linear-gradient(90deg, var(--secondary) 0%, var(--secondary-light) 100%);
+        border-radius: 2px;
+        animation: scaleIn 0.6s ease-out 0.3s both;
+    }
+
+    /* ========================================
+       📋 CONTENEUR PRINCIPAL
+       ======================================== */
+    .main-container {
+        animation: scaleIn 0.6s ease-out 0.2s both;
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        transition: all 0.3s ease;
+    }
+
+    .main-container:hover {
+        box-shadow: 0 15px 50px rgba(76, 101, 89, 0.15);
+    }
+
+    /* ========================================
+       🎯 BARRES DE SECTION
+       ======================================== */
+    .section-bar {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .section-bar::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: pulse 3s ease-in-out infinite;
+    }
+
+    .section-bar:hover {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, #2a3a31 100%);
+    }
+
+    /* ========================================
+       📊 TABLEAUX
+       ======================================== */
+    .info-table {
+        animation: fadeInUp 0.6s ease-out 0.3s both;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .info-table tr {
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+    }
+
+    .info-table tr:hover {
+        background: linear-gradient(90deg, rgba(76, 101, 89, 0.03) 0%, transparent 100%);
+        border-left-color: var(--secondary);
+    }
+
+    .criteria-table {
+        animation: fadeInUp 0.6s ease-out both;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .criteria-table:nth-of-type(1) { animation-delay: 0.4s; }
+    .criteria-table:nth-of-type(2) { animation-delay: 0.5s; }
+    .criteria-table:nth-of-type(3) { animation-delay: 0.6s; }
+
+    .criteria-table thead {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+    }
+
+    .criteria-table tbody tr {
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+    }
+
+    .criteria-table tbody tr:hover {
+        background: linear-gradient(90deg, rgba(76, 101, 89, 0.03) 0%, transparent 100%);
+        border-left-color: var(--secondary);
+    }
+
+    /* ========================================
+       📝 CHAMPS DE FORMULAIRE
+       ======================================== */
+    .form-select,
+    .form-textarea,
+    .form-input {
+        border: 2px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+
+    .form-select:focus,
+    .form-textarea:focus,
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(76, 101, 89, 0.1);
+        transform: translateY(-1px);
+    }
+
+    .form-select:hover,
+    .form-textarea:hover,
+    .form-input:hover {
+        border-color: var(--primary-light);
+    }
+
+    /* ========================================
+       💬 JUSTIFICATION
+       ======================================== */
+    .justification-container {
+        animation: slideInRight 0.3s ease-out;
+        background: linear-gradient(135deg, rgba(238, 161, 46, 0.05) 0%, rgba(238, 161, 46, 0.02) 100%);
+        border-left: 4px solid var(--secondary);
+        border-radius: 0 0.5rem 0.5rem 0;
+        padding: 0.75rem;
+    }
+
+    .justification-label {
+        color: var(--secondary-dark);
+        font-weight: 500;
+        font-size: 0.875rem;
+    }
+
+    /* ========================================
+       ⚠️ MESSAGES D'ERREUR
+       ======================================== */
+    .error-message {
+        animation: slideInRight 0.3s ease-out;
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        color: #dc2626;
+        border-left: 4px solid #ef4444;
+        padding: 0.75rem 1rem;
+        border-radius: 0 0.5rem 0.5rem 0;
+        margin-bottom: 1rem;
+    }
+
+    /* ========================================
+       📋 SECTION INFO ÉVALUATION
+       ======================================== */
+    .eval-info-section {
+        animation: fadeInUp 0.6s ease-out 0.35s both;
+        background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+        border: 2px solid #e5e7eb;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .eval-info-section:hover {
+        border-color: var(--primary-light);
+        box-shadow: 0 4px 12px rgba(76, 101, 89, 0.1);
+    }
+
+    .eval-info-title {
+        color: var(--primary-dark);
+        font-weight: 600;
+        margin-bottom: 1rem;
+        position: relative;
+        padding-left: 1rem;
+    }
+
+    .eval-info-title::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 70%;
+        background: linear-gradient(180deg, var(--secondary) 0%, var(--secondary-light) 100%);
+        border-radius: 2px;
+    }
+
+    /* ========================================
+       📋 SECTION AVIS
+       ======================================== */
+    .avis-section {
+        animation: fadeInUp 0.6s ease-out 0.7s both;
+        background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+        border: 2px solid #e5e7eb;
+        border-radius: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .avis-section:hover {
+        border-color: var(--primary-light);
+        box-shadow: 0 4px 12px rgba(76, 101, 89, 0.1);
+    }
+
+    .avis-table {
+        width: 100%;
+    }
+
+    .avis-table tr {
+        transition: all 0.3s ease;
+    }
+
+    .avis-table tr:hover {
+        background: linear-gradient(90deg, rgba(76, 101, 89, 0.03) 0%, transparent 100%);
+    }
+
+    /* ========================================
+       🎨 TITRES DE SECTION
+       ======================================== */
+    .section-title {
+        color: var(--secondary-dark);
+        font-weight: 600;
+        position: relative;
+        padding-left: 1rem;
+        animation: slideInRight 0.6s ease-out both;
+    }
+
+    .section-title::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 70%;
+        background: linear-gradient(180deg, var(--secondary) 0%, var(--secondary-light) 100%);
+        border-radius: 2px;
+    }
+
+    .section-title-alt {
+        color: var(--primary-dark);
+    }
+
+    /* ========================================
+       🔘 BOUTONS
+       ======================================== */
+    .btn-submit {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        animation: fadeInUp 0.6s ease-out 0.8s both;
+    }
+
+    .btn-submit::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-submit:hover::before {
+        left: 100%;
+    }
+
+    .btn-submit:hover {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, #2a3a31 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(76, 101, 89, 0.3);
+    }
+
+    .btn-submit:active {
+        transform: translateY(0);
+    }
+
+    .btn-retour {
+        background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        color: white;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        animation: fadeInUp 0.6s ease-out 0.8s both;
+    }
+
+    .btn-retour::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-retour:hover::before {
+        left: 100%;
+    }
+
+    .btn-retour:hover {
+        background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(107, 114, 128, 0.3);
+    }
+
+    .btn-retour:active {
+        transform: translateY(0);
+    }
+
+    /* ========================================
+       📱 RESPONSIVE
+       ======================================== */
+    @media (max-width: 768px) {
+        .main-title {
+            font-size: 1.5rem;
+        }
+
+        .criteria-table {
+            font-size: 0.875rem;
+        }
+
+        .btn-submit,
+        .btn-retour {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        .eval-info-section .grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* ========================================
+       🎯 SCROLLBAR PERSONNALISÉE
+       ======================================== */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
+        border-radius: 10px;
+        transition: background 0.3s ease;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, var(--primary-dark) 0%, #2a3a31 100%);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% load dict_extras %}
+{% load custom_filters %}
+
+<div class="max-w-7xl mx-auto">
+    <h2 class="main-title text-2xl font-bold mb-6 text-center">📄 Fiche d'Évaluation - {{ agent.nom }} {{ agent.prenoms }}</h2>
+
+    <div class="main-container bg-white rounded-lg shadow-lg p-6">
+        <form method="post">
+            {% csrf_token %}
+
+            <!-- 🔹 Informations du Personnel -->
+            <div class="section-bar text-center py-4 mb-6">
+                <h3 class="text-xl font-semibold relative z-10">Informations du Personnel</h3>
+            </div>
+            <table class="info-table w-full border-collapse mb-6">
+                <tr><td class="px-4 py-2 font-semibold bg-gray-50">Nom et Prénoms :</td><td class="px-4 py-2">{{ agent.nom }} {{ agent.prenoms }}</td></tr>
+                <tr><td class="px-4 py-2 font-semibold bg-gray-50">Matricule :</td><td class="px-4 py-2">{{ agent.matricule }}</td></tr>
+                <tr><td class="px-4 py-2 font-semibold bg-gray-50">Date d'embauche :</td><td class="px-4 py-2">{{ agent.date_embauche }}</td></tr>
+                <tr><td class="px-4 py-2 font-semibold bg-gray-50">Catégorie :</td><td class="px-4 py-2">{{ agent.categorie }}</td></tr>
+                <tr><td class="px-4 py-2 font-semibold bg-gray-50">Direction :</td><td class="px-4 py-2">{{ agent.direction.nom }}</td></tr>
+                <tr><td class="px-4 py-2 font-semibold bg-gray-50">Type de Personnel :</td><td class="px-4 py-2">🔹Directeur</td></tr>
+            </table>
+
+            <!-- 🔹 Informations Générales sur l'Évaluation -->
+            <div class="eval-info-section mb-6">
+                <h3 class="eval-info-title text-lg">📆 Informations de l'Évaluation</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Année :</label>
+                        <div class="p-2 bg-gray-100 rounded border border-gray-300">
+                            {{ form.annee.value|default:"N/A" }}
+                        </div>
+                        {{ form.annee }}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Semestre :</label>
+                        <div class="p-2 bg-gray-100 rounded border border-gray-300">
+                            Semestre {{ semestre }}
+                        </div>
+                        {{ form.semestre }}
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Type de Personnel :</label>
+                        <div class="p-2 bg-gray-100 rounded border border-gray-300">
+                            Responsable (Directeur)
+                        </div>
+                        {{ form.type_personnel }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Afficher les erreurs du formulaire -->
+            {% if form.errors %}
+                <div class="error-message">
+                    <ul class="errorlist">
+                        {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                        {% for field in form %}
+                            {% if field.errors %}
+                                <li>{{ field.label }}: {{ field.errors|striptags }}</li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <!-- 🔹 Évaluation du Rendement -->
+            <h3 class="section-title text-xl mb-4">📊 A- Évaluation du Rendement</h3>
+            <table class="criteria-table w-full border-collapse mb-6">
+                <thead>
+                    <tr>
+                        <th class="py-3 px-4 text-left font-semibold">Critères</th>
+                        <th class="py-3 px-4 text-left font-semibold w-40">Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for field in form %}
+                        {% if field.name in criteres_rendement %}
+                            <tr class="border-b">
+                                <td class="px-4 py-2">{{ field.label }}</td>
+                                <td class="px-4 py-2">
+                                    {{ field }}
+                                    <div id="justif_{{ field.id_for_label }}" class="hidden mt-2">
+                                        <div class="justification-container">
+                                            <label class="justification-label">Justification (note 1 ou 5) :</label>
+                                            <textarea name="{{ field.name }}_justif" rows="2" class="form-textarea w-full border rounded mt-1">{{ justifications|get_item:field.name|default:"" }}</textarea>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- 🔹 Évaluation du Comportement -->
+            <h3 class="section-title section-title-alt text-xl mb-4">📊 C- Évaluation du Comportement</h3>
+            <table class="criteria-table w-full border-collapse mb-6">
+                <thead>
+                    <tr>
+                        <th class="py-3 px-4 text-left font-semibold">Critères</th>
+                        <th class="py-3 px-4 text-left font-semibold w-40">Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for field in form %}
+                        {% if field.name in criteres_comportement %}
+                            <tr class="border-b">
+                                <td class="px-4 py-2">{{ field.label }}</td>
+                                <td class="px-4 py-2">
+                                    {{ field }}
+                                    <div id="justif_{{ field.id_for_label }}" class="hidden mt-2">
+                                        <div class="justification-container">
+                                            <label class="justification-label">Justification (note 1 ou 5) :</label>
+                                            <textarea name="{{ field.name }}_justif" rows="2" class="form-textarea w-full border rounded mt-1">{{ justifications|get_item:field.name|default:"" }}</textarea>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- 🔹 Évaluation du Management (pour responsables) -->
+            <h3 class="section-title section-title-alt text-xl mb-4">📊 D- Évaluation du Management</h3>
+            <table class="criteria-table w-full border-collapse mb-6">
+                <thead>
+                    <tr>
+                        <th class="py-3 px-4 text-left font-semibold">Critères</th>
+                        <th class="py-3 px-4 text-left font-semibold w-40">Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for field in form %}
+                        {% if field.name in 'leadership,planification,travail_equipe,resolution_problemes,prise_decision' %}
+                            <tr class="border-b">
+                                <td class="px-4 py-2">{{ field.label }}</td>
+                                <td class="px-4 py-2">
+                                    {{ field }}
+                                    <div id="justif_{{ field.id_for_label }}" class="hidden mt-2">
+                                        <div class="justification-container">
+                                            <label class="justification-label">Justification (note 1 ou 5) :</label>
+                                            <textarea name="{{ field.name }}_justif" rows="2" class="form-textarea w-full border rounded mt-1">{{ justifications|get_item:field.name|default:"" }}</textarea>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- 🔹 Avis du Directeur -->
+            <h3 class="section-title section-title-alt text-xl mb-4">✏️ Avis du Directeur General</h3>
+            <div class="avis-section p-4 mb-6">
+                <table class="avis-table">
+                    <tr>
+                        <td class="px-4 py-2 font-semibold text-gray-700">{{ form.avis_directeur.label_tag }}</td>
+                        <td class="px-4 py-2">{{ form.avis_directeur }}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- 🔹 Boutons de soumission -->
+            <div class="text-center mt-6 flex flex-col sm:flex-row justify-center gap-4">
+                <button type="submit" class="btn-submit px-6 py-3 rounded-lg">
+                    ✅ Enregistrer l'Évaluation
+                </button>
+                <a href="{% url 'dashboard_dg' %}" class="btn-retour px-6 py-3 rounded-lg inline-flex items-center justify-center">
+                    ⬅️ Retour
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Validation des caractères pour avis_directeur
+    const avisField = document.getElementById('id_avis_directeur');
+    if (avisField) {
+        avisField.addEventListener('input', function(e) {
+            const forbiddenChars = /[@/#&"#~{[|``:+°)0-9;*ù^()§_?=*$<>\\]/g;
+            this.value = this.value.replace(forbiddenChars, '');
+        });
+    }
+</script>
+
+<!-- 🔹 Scripts de style pour les champs Django avec Tailwind -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Appliquer les styles CSS aux champs de formulaire
+        const textInputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="date"], input[type="number"], select');
+        textInputs.forEach(input => {
+            input.classList.add('form-select', 'w-full', 'px-3', 'py-2', 'border', 'border-gray-300', 'rounded-md', 'shadow-sm');
+        });
+
+        // Style spécifique pour les textareas
+        const textareas = document.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+            textarea.classList.add('form-textarea', 'w-full', 'px-3', 'py-2', 'border', 'border-gray-300', 'rounded-md', 'shadow-sm', 'h-32');
+        });
+    });
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Liste complète des critères pour les responsables
+        const champs = [
+            // Critères de rendement
+            'connaissances', 'initiative', 'rendement', 'respect_objectifs',
+            // Critères de comportement
+            'civisme', 'service_public', 'relations_humaines', 'discipline', 'ponctualite', 'assiduite', 'tenue',
+            // Critères de management
+            'leadership', 'planification', 'travail_equipe', 'resolution_problemes', 'prise_decision'
+        ];
+
+        champs.forEach(function(champ) {
+            const select = document.getElementById("id_" + champ);
+            const justifDiv = document.getElementById("justif_id_" + champ);
+
+            if (select && justifDiv) {
+                select.addEventListener("change", function() {
+                    if (select.value === "1" || select.value === "5") {
+                        justifDiv.classList.remove("hidden");
+                    } else {
+                        justifDiv.classList.add("hidden");
+                        const textarea = justifDiv.querySelector("textarea");
+                        if (textarea) textarea.value = "";
+                    }
+                });
+
+                // Initialisation si une note est déjà présente
+                if (select.value === "1" || select.value === "5") {
+                    justifDiv.classList.remove("hidden");
+                }
+            } else {
+                console.warn(`Champ ou justification manquant pour ${champ}: select=${select}, justifDiv=${justifDiv}`);
+            }
+        });
+    });
+</script>
+
+{% endblock %}

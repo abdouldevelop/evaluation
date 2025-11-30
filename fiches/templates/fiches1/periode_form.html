@@ -1,0 +1,57 @@
+{% extends 'fiches/base.html' %}
+{% block content %}
+<div class="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+  <div class="mb-6 flex items-center gap-3">
+    <a href="{% url 'gerer_periodes' %}"
+       class="bg-gray-300 text-gray-800 py-2 px-4 rounded hover:bg-gray-400">
+      ← Retour à la liste
+    </a>
+  </div>
+
+  <h1 class="text-2xl font-bold text-gray-800 mb-6">{{ title }}</h1>
+
+  <form method="post" id="periodeForm" class="space-y-6">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {% for field in form %}
+        <div>
+          <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+            {{ field.label }}
+          </label>
+          {{ field }}
+          {% if field.errors %}
+            <p class="text-red-600 text-sm mt-1">{{ field.errors|join:', ' }}</p>
+          {% endif %}
+          {% if field.help_text %}
+            <p class="text-sm text-gray-500 mt-1">{{ field.help_text }}</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="flex gap-3">
+      <button type="submit"
+              class="bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        {{ submit_label }}
+      </button>
+      <a href="{% url 'gerer_periodes' %}"
+         class="bg-gray-300 text-gray-800 py-2 px-4 rounded hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500">
+        Annuler
+      </a>
+    </div>
+  </form>
+</div>
+
+<script>
+document.getElementById('periodeForm').addEventListener('submit', function(e){
+  const d1 = document.querySelector('input[name="date_debut"]')?.value;
+  const d2 = document.querySelector('input[name="date_fin"]')?.value;
+  if (d1 && d2 && new Date(d2) < new Date(d1)) {
+    e.preventDefault();
+    alert("La date de fin doit être postérieure à la date de début.");
+  }
+});
+</script>
+{% endblock %}

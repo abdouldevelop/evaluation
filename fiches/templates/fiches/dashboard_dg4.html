@@ -1,0 +1,755 @@
+{% extends 'fiches/base.html' %}
+{% load static %}
+{% load evaluation_filters %}
+{% load dict_extras %}
+
+{% block title %}Tableau de Bord - Directeur Général{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ========================================
+       🎨 VARIABLES CSS - CHARTE GRAPHIQUE
+       ======================================== */
+    :root {
+        --primary: #4c6559;
+        --primary-dark: #3a4f44;
+        --primary-light: #7a9882;
+        --secondary: #eea12e;
+        --secondary-dark: #d89125;
+        --secondary-light: #f5b858;
+    }
+
+    /* ========================================
+       ✨ ANIMATIONS KEYFRAMES
+       ======================================== */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+    }
+
+    @keyframes shimmer {
+        0% {
+            background-position: -1000px 0;
+        }
+        100% {
+            background-position: 1000px 0;
+        }
+    }
+
+    /* Classes d'animation */
+    .animate-fadeIn {
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    .animate-slideInLeft {
+        animation: slideInLeft 0.5s ease-out;
+    }
+
+    .animate-slideInRight {
+        animation: slideInRight 0.5s ease-out;
+    }
+
+    .animate-scaleIn {
+        animation: scaleIn 0.4s ease-out;
+    }
+
+    .animate-pulse-slow {
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    /* Stagger animation */
+    .stagger-item {
+        opacity: 0;
+        animation: fadeIn 0.4s ease-out forwards;
+    }
+
+    .stagger-item:nth-child(1) { animation-delay: 0.05s; }
+    .stagger-item:nth-child(2) { animation-delay: 0.10s; }
+    .stagger-item:nth-child(3) { animation-delay: 0.15s; }
+    .stagger-item:nth-child(4) { animation-delay: 0.20s; }
+    .stagger-item:nth-child(5) { animation-delay: 0.25s; }
+
+    /* ========================================
+       🎨 EFFETS HOVER
+       ======================================== */
+    .table-row-hover {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+    }
+
+    .table-row-hover:hover {
+        background: linear-gradient(to right, rgba(238, 161, 46, 0.05), transparent);
+        transform: translateX(3px);
+        box-shadow: -3px 0 0 0 var(--secondary);
+    }
+
+    .card-hover {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .card-hover:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(76, 101, 89, 0.15);
+    }
+
+    .btn-hover {
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-hover::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+
+    .btn-hover:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+
+    .btn-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(76, 101, 89, 0.2);
+    }
+
+    /* ========================================
+       🎨 COMPOSANTS PERSONNALISÉS
+       ======================================== */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .gradient-border {
+        position: relative;
+        background: white;
+        border-radius: 1rem;
+    }
+
+    .gradient-border::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 1rem;
+        padding: 2px;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        height: 8px;
+        width: 8px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: var(--primary-dark);
+    }
+
+    .tab-active {
+        border-bottom-color: var(--secondary) !important;
+        color: var(--secondary) !important;
+        background: linear-gradient(to bottom, rgba(238, 161, 46, 0.05), transparent);
+    }
+
+    .transition-smooth {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Badges personnalisés */
+    .badge-success {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+    }
+
+    .badge-warning {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        box-shadow: 0 4px 6px rgba(245, 158, 11, 0.2);
+    }
+
+    .badge-danger {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);
+    }
+
+    /* Statistiques Cards */
+    .stat-card {
+        background: linear-gradient(135deg, rgba(76, 101, 89, 0.05), rgba(238, 161, 46, 0.05));
+        border-left: 4px solid var(--secondary);
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        border-left-width: 6px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-orange-50 via-white to-blue-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- 🎯 EN-TÊTE AVEC TITRE ET ACTIONS -->
+        <div class="flex flex-col sm:flex-row items-center justify-between mb-8">
+            <div class="order-2 sm:order-1 text-center sm:text-left mt-4 sm:mt-0">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800">
+                    Bienvenue, M. le Directeur Général
+                </h2>
+                <p class="text-gray-600 mt-2 text-lg">Vous êtes connecté au compte <span class="font-semibold">Directeur Général</span>.</p>
+            </div>
+            <div class="order-1 sm:order-2 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+                <a href="{% url 'modifier_mot_de_passe' %}" class="flex items-center justify-center px-6 py-3 bg-green-900 text-white rounded-lg shadow-md text-sm hover:bg-green-800 transition-all duration-300">
+                    <span class="mr-2">🔐</span> Modifier mot de passe
+                </a>
+                <a href="{% url 'gerer_signature' %}" class="flex items-center justify-center px-6 py-3 bg-green-900 text-white rounded-lg shadow-md text-sm hover:bg-green-800 transition-all duration-300">
+                    <span class="mr-2">✍️</span> Gérer ma signature
+                </a>
+            </div>
+        </div>
+
+        <!-- 📊 STATISTIQUES DU DASHBOARD -->
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+            <div class="bg-gray-200 text-gray-800 py-4 px-6">
+                <h3 class="text-xl font-semibold text-center">📋 Tableau de Bord du Directeur Général</h3>
+            </div>
+            
+            <!-- KPI Cards -->
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <!-- Total Évaluations -->
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border-l-4 border-blue-500 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm font-medium mb-1">Total Évaluations</p>
+                                <p class="text-3xl font-bold text-blue-600">{{ total_evaluations }}</p>
+                            </div>
+                            <div class="text-4xl">📝</div>
+                        </div>
+                    </div>
+
+                    <!-- Évaluations Agents -->
+                    <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border-l-4 border-green-500 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm font-medium mb-1">Évaluations Agents</p>
+                                <p class="text-3xl font-bold text-green-600">{{ evaluations_agents_count }}</p>
+                            </div>
+                            <div class="text-4xl">👥</div>
+                        </div>
+                    </div>
+
+                    <!-- Évaluations Responsables -->
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border-l-4 border-purple-500 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm font-medium mb-1">Évaluations Responsables</p>
+                                <p class="text-3xl font-bold text-purple-600">{{ evaluations_responsables_count }}</p>
+                            </div>
+                            <div class="text-4xl">💼</div>
+                        </div>
+                    </div>
+
+                    <!-- À Signer -->
+                    <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border-l-4 border-orange-500 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm font-medium mb-1">À Signer</p>
+                                <p class="text-3xl font-bold text-orange-600">{{ evaluations_a_signer_count }}</p>
+                            </div>
+                            <div class="text-4xl">✍️</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🔍 FILTRES -->
+                <form method="get" class="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label for="directionFilter" class="block text-sm font-medium text-gray-700 mb-2">Direction</label>
+                        <select id="directionFilter" name="direction" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                            <option value="all" {% if direction_filter == 'all' %}selected{% endif %}>Toutes les Directions</option>
+                            {% for direction in directions %}
+                                <option value="{{ direction.id }}" {% if direction_filter == direction.id|stringformat:"s" %}selected{% endif %}>{{ direction.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="anneeFilter" class="block text-sm font-medium text-gray-700 mb-2">Année</label>
+                        <select id="anneeFilter" name="annee" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                            <option value="" {% if not annee_filter %}selected{% endif %}>Toutes les Années</option>
+                            {% for annee in annees %}
+                                <option value="{{ annee }}" {% if annee_filter == annee|stringformat:"s" %}selected{% endif %}>{{ annee }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="semestreFilter" class="block text-sm font-medium text-gray-700 mb-2">Semestre</label>
+                        <select id="semestreFilter" name="semestre" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                            <option value="" {% if not semestre_filter %}selected{% endif %}>Tous les Semestres</option>
+                            {% for semestre_value, semestre_label in semestres %}
+                                <option value="{{ semestre_value }}" {% if semestre_filter == semestre_value|stringformat:"s" %}selected{% endif %}>{{ semestre_label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <a href="{% url 'dashboard_stats' %}" class="w-full px-4 py-2 bg-orange-500 text-white rounded-lg shadow-md hover:bg-orange-600 transition-colors duration-150 text-center">
+                            📊 Statistiques
+                        </a>
+                    </div>
+                </form>
+
+                <!-- 🔹 ONGLETS -->
+                <div class="border-b border-gray-200 mb-6">
+                    <nav class="flex flex-wrap -mb-px">
+                        <button class="tab-button w-full sm:w-1/5 py-4 px-2 text-center border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none transition-all" data-tab="evaluer-directeur">
+                            📝 Évaluer Directeur
+                        </button>
+                        <button class="tab-button w-full sm:w-1/5 py-4 px-2 text-center border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none transition-all" data-tab="evaluations-agent">
+                            👥 Évaluations Agents
+                        </button>
+                        <button class="tab-button w-full sm:w-1/5 py-4 px-2 text-center border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none transition-all" data-tab="evaluations-responsable">
+                            💼 Évaluations Responsables
+                        </button>
+                        <button class="tab-button w-full sm:w-1/5 py-4 px-2 text-center border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none transition-all" data-tab="avis">
+                            💬 Avis
+                        </button>
+                        <button class="tab-button w-full sm:w-1/5 py-4 px-2 text-center border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none transition-all" data-tab="evaluations-a-signer">
+                            ✍️ À Signer
+                        </button>
+                    </nav>
+                </div>
+                <!-- ONGLET 1: Évaluer Directeur -->
+                <div id="evaluer-directeur" class="tab-content">
+                    <h3 class="text-xl font-semibold text-green-900 mb-4">📝 Évaluer les Directeurs</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-200 text-gray-900">
+                                    <th class="py-3 px-4 text-left font-semibold">Matricule</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Directeur</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Direction</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for directeur in directeurs %}
+                                <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
+                                    <td class="py-3 px-4">{{ directeur.matricule }}</td>
+                                    <td class="py-3 px-4">{{ directeur.nom }} {{ directeur.prenoms }}</td>
+                                    <td class="py-3 px-4">{{ directeur.direction.nom }}</td>
+                                    <td class="py-3 px-4 text-center">
+                                        <a href="{% url 'evaluer_directeur' directeur.id %}" 
+                                           class="inline-flex items-center justify-center px-3 py-1 bg-green-900 text-white text-sm rounded hover:bg-green-800 transition-colors duration-150">
+                                            📝 Évaluer
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="py-8 text-center text-gray-500">Aucun directeur à évaluer.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ONGLET 2: Évaluations des Agents -->
+                <div id="evaluations-agent" class="tab-content hidden">
+                    <h3 class="text-xl font-semibold text-green-900 mb-4">👥 Évaluations des Agents</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-300 from-orange-500 to-orange-600 border-gray-200">
+                                    <th class="py-3 px-4 text-left font-semibold">Matricule</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Agent</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Direction</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Année</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Semestre</th>
+                                    <th class="py-3 px-4 text-center font-semibold">M1 (Rendement)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">M2 (Comportement)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Moyenne Générale</th>
+                                    <th class="py-3 px-4 text-center font-semibold">MPA S1 (S2)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">MPA S2 (S2)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Total MPA (S2)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Moy. Annuelle (S2)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Décision Finale</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-100">
+                                {% for evaluation in evaluations_agents %}
+                                <tr class="table-row-hover">
+                                    <td class="py-3 px-4 text-gray-700">{{ evaluation.agent.matricule }}</td>
+                                    <td class="py-3 px-4">
+                                        <div class="font-medium text-gray-900">{{ evaluation.agent.nom }} {{ evaluation.agent.prenoms }}</div>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                            {{ evaluation.agent.direction.nom }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-gray-600">{{ evaluation.annee }}</td>
+                                    <td class="py-3 px-4 text-gray-600">{{ evaluation.get_semestre_display }}</td>
+                                    <td class="py-3 px-4 text-center font-semibold text-blue-600">{{ evaluation.note_m1|floatformat:2 }}</td>
+                                    <td class="py-3 px-4 text-center font-semibold text-green-600">{{ evaluation.note_m2|floatformat:2 }}</td>
+                                    <td class="py-3 px-4 text-center font-bold text-[#4c6559]">{{ evaluation.moyenne_generale|floatformat:2 }}</td>
+                                    <td class="py-3 px-4 text-center text-gray-600">{{ evaluation.mpa_s1|default:"-"|floatformat:2 }}</td>
+                                    <td class="py-3 px-4 text-center text-gray-600">{{ evaluation.mpa_s2|default:"-"|floatformat:2 }}</td>
+                                    <td class="py-3 px-4 text-center font-semibold text-indigo-600">{{ evaluation.total_mpa|default:"-"|floatformat:2 }}</td>
+                                    <td class="py-3 px-4 text-center font-bold text-[#eea12e]">{{ evaluation.moyenne_annuelle|default:"-"|floatformat:2 }}</td>
+                                    <td class="py-3 px-4 text-center">
+                                        {% if evaluation.decision_finale %}
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                {{ evaluation.decision_finale }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-gray-400">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-3 px-4 text-center">
+                                        <a href="{% url 'details_evaluation' evaluation.id %}"
+                                           class="inline-flex items-center justify-center px-3 py-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs rounded-lg hover:from-blue-600 hover:to-blue-700 transition-smooth shadow-sm">
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            </svg>
+                                            Détails
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="14" class="py-12 text-center text-gray-500">
+                                        <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                                        </svg>
+                                        <p class="text-lg">Aucune évaluation d'agent trouvée.</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ONGLET 3: Évaluations des Responsables -->
+                <div id="evaluations-responsable" class="tab-content hidden">
+                    <h3 class="text-xl font-semibold text-green-900 mb-4">💼 Évaluations des Responsables</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-300 from-orange-500 to-orange-600 border-gray-200">
+                                    <th class="py-3 px-4 text-left font-semibold">Matricule</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Responsable</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Direction</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Année</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Semestre</th>
+                                    <th class="py-3 px-4 text-center font-semibold">M1 (Rendement)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">M2 (Comportement)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">M3 (Management)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Moyenne Générale</th>
+                                    <th class="py-3 px-4 text-center font-semibold">MPA S1 (S2)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">MPA S2 (S2)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Total MPA (S2)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Moy. Annuelle (S2)</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Décision Finale</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-100">
+                                {% for evaluation in evaluations_responsables %}
+                                <tr class="table-row-hover">
+                                    <td class="py-3 px-4 text-gray-700">{{ evaluation.agent.matricule }}</td>
+                                    <td class="py-3 px-4">
+                                        <div class="font-medium text-gray-900">{{ evaluation.agent.nom }} {{ evaluation.agent.prenoms }}</div>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                            {{ evaluation.agent.direction.nom }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-gray-600">{{ evaluation.annee }}</td>
+                                    <td class="py-3 px-4 text-gray-600">{{ evaluation.get_semestre_display }}</td>
+                                    <td class="py-3 px-4 text-center font-semibold text-blue-600">{{ evaluation.note_m1|floatformat:2 }}</td>
+                                    <td class="py-3 px-4 text-center font-semibold text-green-600">{{ evaluation.note_m2|floatformat:2 }}</td>
+                                    <td class="py-3 px-4 text-center font-semibold text-purple-600">{{ evaluation.note_m3|floatformat:2 }}</td>
+                                    <td class="py-3 px-4 text-center font-bold text-[#4c6559]">{{ evaluation.moyenne_generale|floatformat:2 }}</td>
+                                    <td class="py-3 px-4 text-center text-gray-600">{{ evaluation.mpa_s1|default:"-"|floatformat:2 }}</td>
+                                    <td class="py-3 px-4 text-center text-gray-600">{{ evaluation.mpa_s2|default:"-"|floatformat:2 }}</td>
+                                    <td class="py-3 px-4 text-center font-semibold text-indigo-600">{{ evaluation.total_mpa|default:"-"|floatformat:2 }}</td>
+                                    <td class="py-3 px-4 text-center font-bold text-[#eea12e]">{{ evaluation.moyenne_annuelle|default:"-"|floatformat:2 }}</td>
+                                    <td class="py-3 px-4 text-center">
+                                        {% if evaluation.decision_finale %}
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                {{ evaluation.decision_finale }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-gray-400">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-3 px-4 text-center">
+                                        <a href="{% url 'details_evaluation' eval.id %}"
+                                           class="inline-flex items-center justify-center px-3 py-1 bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs rounded-lg hover:from-purple-600 hover:to-purple-700 transition-smooth shadow-sm">
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            </svg>
+                                            Détails
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="15" class="py-12 text-center text-gray-500">
+                                        <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                                        </svg>
+                                        <p class="text-lg">Aucune évaluation de responsable trouvée.</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ONGLET 4: Avis -->
+                <div id="avis" class="tab-content hidden">
+                    <h3 class="text-xl font-semibold text-green-900 mb-4">💬 Avis des Agents et Responsables</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-200 text-gray-900">
+                                    <th class="py-3 px-4 text-left font-semibold">Matricule</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Agent/Responsable</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Direction</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Année</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Semestre</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Avis</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Détails</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for evaluation in evaluations_avec_avis %}
+                                <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
+                                    <td class="py-3 px-4">{{ evaluation.agent.matricule }}</td>
+                                    <td class="py-3 px-4">{{ evaluation.agent.nom }} {{ evaluation.agent.prenoms }}</td>
+                                    <td class="py-3 px-4">{{ evaluation.agent.direction.nom }}</td>
+                                    <td class="py-3 px-4">{{ evaluation.annee }}</td>
+                                    <td class="py-3 px-4">{{ evaluation.get_semestre_display }}</td>
+                                    <td class="py-3 px-4">
+                                        {% if evaluation.avis_agent %}
+                                            {{ evaluation.avis_agent|truncatewords:15 }}
+                                        {% else %}
+                                            <span class="text-gray-500">Aucun avis</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-3 px-4 text-center">
+                                        <a href="{% url 'details_evaluation' evaluation.id %}" class="inline-flex items-center justify-center px-3 py-1 bg-gray-700 text-white text-sm rounded hover:bg-orange-600 transition-colors duration-150">
+                                            📄 Détails
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="py-8 text-center text-gray-500">Aucune évaluation avec avis disponible.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ONGLET 5: Évaluations à signer -->
+                <div id="evaluations-a-signer" class="tab-content hidden">
+                    <h3 class="text-xl font-semibold text-green-900 mb-4">✍️ Évaluations à Signer</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-200 text-gray-900">
+                                    <th class="py-3 px-4 text-left font-semibold">Agent</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Direction</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Année</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Semestre</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for evaluation in evaluations_a_signer %}
+                                <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
+                                    <td class="py-3 px-4">{{ evaluation.agent.nom }} {{ evaluation.agent.prenoms }}</td>
+                                    <td class="py-3 px-4">{{ evaluation.agent.direction.nom }}</td>
+                                    <td class="py-3 px-4">{{ evaluation.annee }}</td>
+                                    <td class="py-3 px-4">{{ evaluation.get_semestre_display }}</td>
+                                    <td class="py-3 px-4 text-center">
+                                        {% if evaluation.signed_by_evaluator and evaluation.decision_finale and not evaluation.est_signe_dg %}
+                                            <form method="post" action="{% url 'signer_evaluation_dg' evaluation.id %}" class="inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="inline-flex items-center justify-center px-3 py-1 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700 transition-colors duration-150">
+                                                    ✍️ Signer (DG)
+                                                </button>
+                                            </form>
+                                        {% elif evaluation.est_signe_dg %}
+                                            <span class="text-green-600">✅ Déjà signée</span>
+                                        {% else %}
+                                            <span class="text-red-600">⏳ En attente</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="py-8 text-center text-gray-500">Aucune évaluation à signer.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // ========================================
+    // 📑 GESTION DES ONGLETS
+    // ========================================
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Retirer les styles actifs
+            tabButtons.forEach(btn => {
+                btn.classList.remove('border-orange-500', 'text-orange-600');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+
+            // Ajouter styles actifs
+            button.classList.remove('border-transparent', 'text-gray-500');
+            button.classList.add('border-orange-500', 'text-orange-600');
+
+            // Masquer tout le contenu
+            tabContents.forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            // Afficher le contenu sélectionné
+            const tabId = button.getAttribute('data-tab');
+            const targetContent = document.getElementById(tabId);
+            if (targetContent) {
+                targetContent.classList.remove('hidden');
+            }
+        });
+    });
+
+    // Activer le premier onglet par défaut
+    if (tabButtons.length > 0) {
+        tabButtons[0].click();
+    }
+
+    // ========================================
+    // 🔍 FILTRAGE AUTOMATIQUE
+    // ========================================
+    ['directionFilter', 'anneeFilter', 'semestreFilter'].forEach(id => {
+        const filter = document.getElementById(id);
+        if (filter) {
+            filter.addEventListener('change', () => filter.form.submit());
+        }
+    });
+});
+</script>
+{% endblock %}

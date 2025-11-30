@@ -1,0 +1,295 @@
+{# fiches/templates/fiches/evaluer_agent_sous_directeur.html #}
+{% extends 'fiches/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Titre principal -->
+    <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+        📄 Fiche d'Évaluation - {{ agent.nom }} {{ agent.prenoms }}
+    </h2>
+
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <!-- Formulaire d'évaluation -->
+        <form method="post" id="evaluationForm">
+            {% csrf_token %}
+
+            <!-- Section : Informations du Personnel -->
+            <div class="bg-green-custom text-white text-center py-4">
+                <h3 class="text-xl font-semibold">Informations du Personnel</h3>
+            </div>
+            <table class="w-full border-collapse mb-6">
+                <tr>
+                    <td class="px-4 py-2 font-semibold">Nom et Prénoms :</td>
+                    <td class="px-4 py-2">{{ agent.nom }} {{ agent.prenoms }}</td>
+                </tr>
+                <tr>
+                    <td class="px-4 py-2 font-semibold">Matricule :</td>
+                    <td class="px-4 py-2">{{ agent.matricule }}</td>
+                </tr>
+                <tr>
+                    <td class="px-4 py-2 font-semibold">Date d'embauche :</td>
+                    <td class="px-4 py-2">{{ agent.date_embauche }}</td>
+                </tr>
+                <tr>
+                    <td class="px-4 py-2 font-semibold">Catégorie :</td>
+                    <td class="px-4 py-2">{{ agent.categorie }}</td>
+                </tr>
+                <tr>
+                    <td class="px-4 py-2 font-semibold">Direction :</td>
+                    <td class="px-4 py-2">{{ agent.direction.nom }}</td>
+                </tr>
+                <tr>
+                    <td class="px-4 py-2 font-semibold">Sous-direction :</td>
+                    <td class="px-4 py-2">{{ agent.sous_direction.nom|default:"N/A" }}</td>
+                </tr>
+                <tr>
+                    <td class="px-4 py-2 font-semibold">Service :</td>
+                    <td class="px-4 py-2">{{ agent.service.nom|default:"N/A" }}</td>
+                </tr>
+                <tr>
+                    <td class="px-4 py-2 font-semibold">Type de Personnel :</td>
+                    <td class="px-4 py-2">{{ agent.get_type_personnel_display }}</td>
+                </tr>
+            </table>
+
+            <!-- Formulaire d'évaluation détaillé -->
+            <div class="w-full border-collapse mb-6">
+               <!--  <h2 class="text-3xl font-bold mb-6">
+                    Évaluation de {{ agent.nom }} – Semestre {{ semestre }}
+                </h2>-->
+
+                <form method="post" id="evaluationFormSD" class="space-y-6">
+                    {% csrf_token %}
+
+                    <!-- Champs cachés -->
+                    {% for hidden in form.hidden_fields %}
+                        {{ hidden }}
+                    {% endfor %}
+
+                    <!-- Erreurs globales -->
+                    {% if form.non_field_errors %}
+                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <!-- Erreurs par champ -->
+                    {% for field in form.visible_fields %}
+                        {% for err in field.errors %}
+                            <div class="text-red-600 text-sm">
+                                {{ field.label }} : {{ err }}
+                            </div>
+                        {% endfor %}
+                    {% endfor %}
+
+                    <!-- Tableau d'évaluation -->
+                    <table class="w-full border-collapse mb-6">
+                        <thead>
+                            <tr class="bg-gray-300 text-white">
+                                <th class="py-3 px-4 text-left font-semibold">Critère</th>
+                                <th class="py-3 px-4 text-left font-semibold">Note CS</th>
+                                <th class="py-3 px-4 text-left font-semibold">Justif. CS</th>
+                                <th class="py-3 px-4 text-left font-semibold">Note SD</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Section A : Rendement -->
+                            <tr>
+                                <th colspan="4" class="bg-green-custom text-white px-4 py-2">
+                                    📊 A – Rendement
+                                </th>
+                            </tr>
+                            {% for bf, label, just_sd, cs_note, cs_justif in champs_rendement %}
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-2">{{ label }}</td>
+                                    <td class="px-4 py-2">{{ cs_note|default:"–" }}</td>
+                                    <td class="px-4 py-2 whitespace-pre-wrap">{{ cs_justif }}</td>
+                                    <td class="px-4 py-2">
+                                        {{ bf }}
+                                        <!-- Wrapper de justification SD -->
+                                        <div id="justif_{{ bf.id_for_label }}" class="hidden mt-2">
+                                            <label class="text-sm text-gray-600">
+                                                Justification (note 1 ou 5) :
+                                            </label>
+                                            <textarea
+                                                name="{{ bf.name }}_justif"
+                                                rows="2"
+                                                class="w-full border rounded"
+                                            >{{ just_sd }}</textarea>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+
+                            <!-- Section C : Comportement -->
+                            <tr>
+                                <th colspan="4" class="bg-green-custom text-white px-4 py-2">
+                                    📊 C – Comportement
+                                </th>
+                            </tr>
+                            {% for bf, label, just_sd, cs_note, cs_justif in champs_comportement %}
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-2">{{ label }}</td>
+                                    <td class="px-4 py-2">{{ cs_note|default:"–" }}</td>
+                                    <td class="px-4 py-2 whitespace-pre-wrap">{{ cs_justif }}</td>
+                                    <td class="px-4 py-2">
+                                        {{ bf }}
+                                        <div id="justif_{{ bf.id_for_label }}" class="hidden mt-2">
+                                            <label class="text-sm text-gray-600">
+                                                Justification (note 1 ou 5) :
+                                            </label>
+                                            <textarea
+                                                name="{{ bf.name }}_justif"
+                                                rows="2"
+                                                class="w-full border rounded"
+                                            >{{ just_sd }}</textarea>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+
+                            <!-- Section B : Management (si applicable) -->
+                            {% if champs_management %}
+                                <tr>
+                                    <th colspan="4" class="bg-green-custom text-white px-4 py-2">
+                                        📊 B – Management
+                                    </th>
+                                </tr>
+                                {% for bf, label, just_sd, cs_note, cs_justif in champs_management %}
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="px-4 py-2">{{ label }}</td>
+                                        <td class="px-4 py-2">{{ cs_note|default:"–" }}</td>
+                                        <td class="px-4 py-2 whitespace-pre-wrap">{{ cs_justif }}</td>
+                                        <td class="px-4 py-2">
+                                            {{ bf }}
+                                            <div id="justif_{{ bf.id_for_label }}" class="hidden mt-2">
+                                                <label class="text-sm text-gray-600">
+                                                    Justification (note 1 ou 5) :
+                                                </label>
+                                                <textarea
+                                                    name="{{ bf.name }}_justif"
+                                                    rows="2"
+                                                    class="w-full border rounded"
+                                                >{{ just_sd }}</textarea>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% endif %}
+                        </tbody>
+                    </table>
+
+                    <!-- Bouton de soumission -->
+                    <div class="text-right">
+                        <button
+                            type="submit"
+                            class="px-6 py-2 bg-green-700 text-white font-semibold rounded hover:bg-green-600"
+                        >
+                            📝 Enregistrer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+{# === SCRIPT JS === #}
+{% block extra_js %}
+
+<script>
+    // Gestion des justifications (afficher/masquer)
+    function toggleJustification(select) {
+        console.log("toggleJustification appelé pour ID:", select.id, "Valeur:", select.value);
+        const value = parseInt(select.value);
+        const justifDiv = document.getElementById("justif_" + select.id);
+        if (justifDiv) {
+            if (value === 1 || value === 5) {
+                console.log("Affichage du champ de justification pour:", select.id);
+                justifDiv.classList.remove("hidden");
+            } else {
+                console.log("Masquage du champ de justification pour:", select.id);
+                justifDiv.classList.add("hidden");
+                const textarea = justifDiv.querySelector("textarea");
+                if (textarea) textarea.value = "";
+            }
+        } else {
+            console.error("Div de justification non trouvé pour l'ID: justif_" + select.id);
+        }
+    }
+
+    // Validation avant soumission
+    document.getElementById("evaluationForm").addEventListener("submit", function(event) {
+        console.log("Validation du formulaire avant soumission");
+        const inputs = document.querySelectorAll("select:not([name$='_justif']):not([name='semestre']):not([name='annee']):not([name='type_personnel'])");
+        let hasError = false;
+        inputs.forEach(input => {
+            const value = parseInt(input.value);
+            if (value === 1 || value === 5) {
+                const justifDiv = document.getElementById("justif_" + input.id);
+                if (justifDiv) {
+                    const justifText = justifDiv.querySelector("textarea").value.trim();
+                    if (!justifText) {
+                        console.warn("Justification manquante pour:", input.name);
+                        alert(`Veuillez fournir une justification pour la note ${value} du critère ${input.name}.`);
+                        hasError = true;
+                    }
+                } else {
+                    console.error("Champ de justification manquant pour:", input.name);
+                    alert(`Champ de justification manquant pour le critère ${input.name}.`);
+                    hasError = true;
+                }
+            }
+        });
+        if (hasError) {
+            console.log("Soumission bloquée en raison d'erreurs");
+            event.preventDefault();
+        }
+    });
+
+    // Initialisation au chargement de la page
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log("Initialisation des champs de formulaire");
+        const inputs = document.querySelectorAll("select:not([name$='_justif']):not([name='semestre']):not([name='annee']):not([name='type_personnel'])");
+        inputs.forEach(input => {
+            input.classList.add('w-full', 'px-3', 'py-2', 'border', 'border-gray-300', 'rounded-md', 'shadow-sm', 'focus:outline-none', 'focus:ring-2', 'focus:ring-orange-custom', 'focus:border-orange-custom');
+            input.addEventListener("change", function() {
+                toggleJustification(this);
+            });
+            // Initialiser l'affichage pour les valeurs pré-remplies
+            toggleJustification(input);
+        });
+
+        const textareas = document.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+            textarea.classList.add('w-full', 'px-3', 'py-2', 'border', 'border-gray-300', 'rounded-md', 'shadow-sm', 'focus:outline-none', 'focus:ring-2', 'focus:ring-orange-custom', 'focus:border-orange-custom', 'h-32');
+        });
+    });
+
+    // Validation des caractères pour avis_directeur
+    document.getElementById('id_avis_directeur').addEventListener('input', function(e) {
+        const forbiddenChars = /[@/#&"#~{[|``:+°)0-9;*ù^()§_?=*$<>\\]/g;
+        this.value = this.value.replace(forbiddenChars, '');
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Appliquer Tailwind CSS aux champs de formulaire
+        const textInputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="date"], input[type="number"], select');
+        textInputs.forEach(input => {
+            input.classList.add('w-full', 'px-3', 'py-2', 'border', 'border-gray-300', 'rounded-md', 'shadow-sm', 'focus:outline-none', 'focus:ring-2', 'focus:ring-orange-custom', 'focus:border-orange-custom');
+        });
+
+        // Style spécifique pour les textareas
+        const textareas = document.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+            textarea.classList.add('w-full', 'px-3', 'py-2', 'border', 'border-gray-300', 'rounded-md', 'shadow-sm', 'focus:outline-none', 'focus:ring-2', 'focus:ring-orange-custom', 'focus:border-orange-custom', 'h-32');
+        });
+    });
+</script>
+{% endblock %}
+
+{% endblock %}
