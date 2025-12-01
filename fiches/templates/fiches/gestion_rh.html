@@ -205,6 +205,40 @@
             </a>
         </div>
 
+        <!-- 📢 Messages Django -->
+        {% if messages %}
+        <div class="mb-6 space-y-3 animate-fadeIn">
+            {% for message in messages %}
+            <div class="flex items-start p-4 rounded-xl shadow-sm {% if message.tags == 'success' %}bg-green-50 border-l-4 border-green-500{% elif message.tags == 'error' %}bg-red-50 border-l-4 border-red-500{% elif message.tags == 'warning' %}bg-yellow-50 border-l-4 border-yellow-500{% else %}bg-blue-50 border-l-4 border-blue-500{% endif %}">
+                <div class="flex-shrink-0">
+                    {% if message.tags == 'success' %}
+                    <svg class="w-6 h-6 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    {% elif message.tags == 'error' %}
+                    <svg class="w-6 h-6 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                    {% elif message.tags == 'warning' %}
+                    <svg class="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    {% else %}
+                    <svg class="w-6 h-6 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    {% endif %}
+                </div>
+                <div class="ml-3 flex-1">
+                    <p class="text-sm font-medium {% if message.tags == 'success' %}text-green-800{% elif message.tags == 'error' %}text-red-800{% elif message.tags == 'warning' %}text-yellow-800{% else %}text-blue-800{% endif %}">
+                        {{ message }}
+                    </p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
         <!-- 📊 Card principale -->
         <div class="glass-card rounded-2xl shadow-xl overflow-hidden card-hover animate-scaleIn">
             <!-- En-tête -->
@@ -254,6 +288,15 @@
                             </svg>
                             <span class="hidden sm:inline">Changer Direction</span>
                             <span class="sm:hidden">Changer</span>
+                        </span>
+                    </a>
+                    <a class="tab-link stagger-item flex-1 py-4 px-4 text-center border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-[#4c6559] hover:border-gray-300 transition-smooth focus:outline-none" data-tab="listePersonnel" href="#listePersonnel">
+                        <span class="flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <span class="hidden sm:inline">Liste du Personnel</span>
+                            <span class="sm:hidden">Liste</span>
                         </span>
                     </a>
                     <a class="tab-link stagger-item flex-1 py-4 px-4 text-center border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-[#4c6559] hover:border-gray-300 transition-smooth focus:outline-none" data-tab="importerPersonnel" href="#importerPersonnel">
@@ -355,32 +398,185 @@
                             </svg>
                             Ajouter un Agent
                         </h4>
-                        <p class="text-gray-600">Enregistrez un nouvel agent ou responsable</p>
+                        <p class="text-gray-600 mb-6">Enregistrez un nouvel agent ou responsable dans le système</p>
                     </div>
-                    <form method="post" class="space-y-6">
+
+                    <form method="post" class="space-y-8" id="addAgentForm">
                         {% csrf_token %}
-                        <div class="space-y-5">
-                            {% for field in agent_form %}
-                            <div>
-                                <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
-                                    {{ field.label }}
-                                </label>
-                                {{ field }}
-                                {% if field.help_text %}
-                                <p class="mt-2 text-sm text-gray-500">{{ field.help_text }}</p>
-                                {% endif %}
-                                {% if field.errors %}
-                                <p class="mt-2 text-sm text-red-600">{{ field.errors }}</p>
-                                {% endif %}
+
+                        <!-- SECTION 1: Informations Personnelles -->
+                        <div class="bg-gray-50 rounded-xl p-6">
+                            <h5 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b-2 border-[#eea12e] flex items-center">
+                                <svg class="w-5 h-5 mr-2 text-[#eea12e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                                Informations Personnelles
+                            </h5>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="id_matricule" class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Matricule <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" name="matricule" id="id_matricule" required
+                                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559]"
+                                           placeholder="Ex: AG2024001">
+                                </div>
+
+                                <div>
+                                    <label for="id_nom" class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Nom <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" name="nom" id="id_nom" required
+                                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559]"
+                                           placeholder="Nom de famille">
+                                </div>
+
+                                <div>
+                                    <label for="id_prenoms" class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Prénoms <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" name="prenoms" id="id_prenoms" required
+                                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559]"
+                                           placeholder="Prénoms">
+                                </div>
+
+                                <div>
+                                    <label for="id_categorie" class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Catégorie <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" name="categorie" id="id_categorie" required
+                                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559]"
+                                           placeholder="Ex: A1, B2, C3">
+                                </div>
+
+                                <div>
+                                    <label for="id_date_embauche" class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Date d'embauche <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="date" name="date_embauche" id="id_date_embauche" required
+                                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559]">
+                                </div>
+
+                                <div>
+                                    <label for="id_type_personnel" class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Type de Personnel <span class="text-red-500">*</span>
+                                    </label>
+                                    <select name="type_personnel" id="id_type_personnel" required
+                                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559]">
+                                        <option value="">-- Sélectionner --</option>
+                                        <option value="agent">Agent</option>
+                                        <option value="responsable">Responsable</option>
+                                    </select>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label for="id_email" class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Email <span class="text-gray-400 text-xs">(optionnel)</span>
+                                    </label>
+                                    <input type="email" name="email" id="id_email"
+                                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559]"
+                                           placeholder="exemple@anstat.mg">
+                                    <p class="mt-1 text-xs text-gray-500">Cet email sera utilisé pour le compte utilisateur si vous créez un compte ci-dessous</p>
+                                </div>
                             </div>
-                            {% endfor %}
                         </div>
-                        <button type="submit" name="ajouter_agent" class="btn-hover w-full flex items-center justify-center px-6 py-4 bg-gradient-to-r from-[#4c6559] to-[#3a4f44] text-white rounded-xl shadow-lg text-lg font-semibold hover:from-[#3a4f44] hover:to-[#4c6559] transition-smooth">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                            </svg>
-                            Ajouter l'Agent
-                        </button>
+
+                        <!-- SECTION 2: Affectation -->
+                        <div class="bg-gray-50 rounded-xl p-6">
+                            <h5 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b-2 border-[#eea12e] flex items-center">
+                                <svg class="w-5 h-5 mr-2 text-[#eea12e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                </svg>
+                                Affectation Organisationnelle
+                            </h5>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="id_direction" class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Direction <span class="text-red-500">*</span>
+                                    </label>
+                                    <select name="direction" id="id_direction" required
+                                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559]"
+                                            onchange="updateSousDirections()">
+                                        <option value="">-- Sélectionner une direction --</option>
+                                        {% for direction in directions %}
+                                        <option value="{{ direction.id }}">{{ direction.nom }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="id_sous_direction" class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Sous-Direction <span class="text-gray-400 text-xs">(optionnel)</span>
+                                    </label>
+                                    <select name="sous_direction" id="id_sous_direction"
+                                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559]"
+                                            onchange="updateServices()" disabled>
+                                        <option value="">-- Sélectionner d'abord une direction --</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="id_service" class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Service <span class="text-gray-400 text-xs">(optionnel)</span>
+                                    </label>
+                                    <select name="service" id="id_service"
+                                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559]"
+                                            disabled>
+                                        <option value="">-- Sélectionner d'abord une sous-direction --</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="id_poste" class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Poste <span class="text-gray-400 text-xs">(optionnel)</span>
+                                    </label>
+                                    <input type="text" name="poste" id="id_poste"
+                                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559]"
+                                           placeholder="Ex: Chef de projet, Analyste...">
+                                </div>
+
+                                <div>
+                                    <label for="id_tenu_depuis" class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Tenu depuis <span class="text-gray-400 text-xs">(optionnel)</span>
+                                    </label>
+                                    <input type="date" name="tenu_depuis" id="id_tenu_depuis"
+                                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559]">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECTION 3: Compte Utilisateur (optionnel) -->
+                        <div class="bg-blue-50 border-l-4 border-blue-400 rounded-lg p-6">
+                            <div class="flex items-start">
+                                <input type="checkbox" id="creer_compte" name="creer_compte" class="mt-1 mr-3 h-5 w-5 text-[#4c6559] focus:ring-[#4c6559] border-gray-300 rounded">
+                                <div class="flex-1">
+                                    <label for="creer_compte" class="font-semibold text-gray-800 cursor-pointer">
+                                        Créer automatiquement un compte utilisateur
+                                    </label>
+                                    <p class="text-sm text-gray-600 mt-1">
+                                        Si coché, un compte sera créé avec le matricule comme nom d'utilisateur et un mot de passe par défaut (<code class="bg-white px-2 py-1 rounded">0000</code>).
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Boutons d'action -->
+                        <div class="flex space-x-4">
+                            <button type="reset" class="flex-1 px-6 py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl shadow-lg text-lg font-semibold transition-colors">
+                                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                                Réinitialiser
+                            </button>
+                            <button type="submit" name="ajouter_agent" class="btn-hover flex-1 flex items-center justify-center px-6 py-4 bg-gradient-to-r from-[#4c6559] to-[#3a4f44] text-white rounded-xl shadow-lg text-lg font-semibold hover:from-[#3a4f44] hover:to-[#4c6559] transition-smooth">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                Enregistrer l'Agent
+                            </button>
+                        </div>
                     </form>
                 </div>
 
@@ -393,36 +589,276 @@
                             </svg>
                             Changer la Direction d'un Agent
                         </h4>
-                        <p class="text-gray-600">Transférez un agent vers une autre direction</p>
+                        <p class="text-gray-600 mb-6">Transférez un agent vers une autre direction</p>
                     </div>
-                    <form method="post" class="space-y-6">
-                        {% csrf_token %}
-                        <div class="space-y-5">
-                            {% for field in changer_direction_form %}
-                            <div>
-                                <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
-                                    {{ field.label }}
-                                </label>
-                                {{ field }}
-                                {% if field.help_text %}
-                                <p class="mt-2 text-sm text-gray-500">{{ field.help_text }}</p>
-                                {% endif %}
-                                {% if field.errors %}
-                                <p class="mt-2 text-sm text-red-600">{{ field.errors }}</p>
-                                {% endif %}
-                            </div>
-                            {% endfor %}
-                        </div>
-                        <button type="submit" name="changer_direction" class="btn-hover w-full flex items-center justify-center px-6 py-4 bg-gradient-to-r from-[#eea12e] to-[#d89125] text-white rounded-xl shadow-lg text-lg font-semibold hover:from-[#d89125] hover:to-[#eea12e] transition-smooth">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-                            </svg>
-                            Changer la Direction
-                        </button>
-                    </form>
+
+                    <!-- Barre de recherche -->
+                    <div class="mb-4">
+                        <input type="text" id="searchAgent" placeholder="🔍 Rechercher un agent (matricule, nom, prénom...)"
+                               class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559]">
+                    </div>
+
+                    <!-- Liste des agents -->
+                    <div class="overflow-x-auto rounded-xl border-2 border-gray-200 shadow-sm">
+                        <table class="w-full border-collapse">
+                            <thead class="bg-gradient-to-r from-gray-100 to-gray-50">
+                                <tr>
+                                    <th class="py-4 px-4 text-left font-semibold text-gray-700 border-b-2 border-gray-200">Matricule</th>
+                                    <th class="py-4 px-4 text-left font-semibold text-gray-700 border-b-2 border-gray-200">Nom & Prénoms</th>
+                                    <th class="py-4 px-4 text-left font-semibold text-gray-700 border-b-2 border-gray-200">Direction Actuelle</th>
+                                    <th class="py-4 px-4 text-left font-semibold text-gray-700 border-b-2 border-gray-200">Sous-Direction</th>
+                                    <th class="py-4 px-4 text-left font-semibold text-gray-700 border-b-2 border-gray-200">Service</th>
+                                    <th class="py-4 px-4 text-center font-semibold text-gray-700 border-b-2 border-gray-200">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="agentsTableBody">
+                                {% for agent in agents %}
+                                <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors agent-row"
+                                    data-search="{{ agent.matricule|lower }} {{ agent.nom|lower }} {{ agent.prenoms|lower }} {{ agent.direction.nom|lower }}">
+                                    <td class="py-3 px-4 font-medium text-gray-800">{{ agent.matricule }}</td>
+                                    <td class="py-3 px-4 text-gray-700">{{ agent.nom }} {{ agent.prenoms }}</td>
+                                    <td class="py-3 px-4 text-gray-600">
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-sm font-medium">
+                                            {{ agent.direction.sigle|default:agent.direction.nom }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-gray-600">{{ agent.sous_direction|default:"-" }}</td>
+                                    <td class="py-3 px-4 text-gray-600">{{ agent.service|default:"-" }}</td>
+                                    <td class="py-3 px-4 text-center">
+                                        <button onclick="openChangeDirectionModal({{ agent.id }}, '{{ agent.nom }} {{ agent.prenoms }}', '{{ agent.direction.nom }}')"
+                                                class="inline-flex items-center px-3 py-2 bg-[#eea12e] hover:bg-[#d89125] text-white text-sm rounded-lg transition-colors">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                                            </svg>
+                                            Changer
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="py-8 text-center text-gray-500">
+                                        <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                                        </svg>
+                                        <p class="text-lg">Aucun agent trouvé</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <!-- ONGLET 5: Importer Personnel -->
+                <!-- Modal pour changer la direction -->
+                <div id="changeDirectionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="if(event.target===this) closeChangeDirectionModal()">
+                    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 animate-scaleIn">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-2xl font-bold text-[#4c6559]">Changer de Direction</h3>
+                            <button onclick="closeChangeDirectionModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="mb-6 p-4 bg-blue-50 rounded-lg">
+                            <p class="text-sm text-gray-700"><strong>Agent:</strong> <span id="modalAgentName"></span></p>
+                            <p class="text-sm text-gray-700 mt-1"><strong>Direction actuelle:</strong> <span id="modalCurrentDirection"></span></p>
+                        </div>
+
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="agent_id" id="modalAgentId">
+
+                            <div class="mb-6">
+                                <label for="modalNewDirection" class="block text-sm font-semibold text-gray-700 mb-2">Nouvelle Direction</label>
+                                <select name="direction" id="modalNewDirection" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559]">
+                                    <option value="">-- Sélectionner une direction --</option>
+                                    {% for direction in directions %}
+                                    <option value="{{ direction.id }}">{{ direction.nom }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="flex space-x-3">
+                                <button type="button" onclick="closeChangeDirectionModal()" class="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-semibold transition-colors">
+                                    Annuler
+                                </button>
+                                <button type="submit" name="changer_direction" class="flex-1 px-6 py-3 bg-gradient-to-r from-[#eea12e] to-[#d89125] hover:from-[#d89125] hover:to-[#eea12e] text-white rounded-xl font-semibold transition-all">
+                                    Confirmer
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- ONGLET 5: Liste du Personnel -->
+                <div class="tab-pane hidden" id="listePersonnel">
+                    <div class="mb-6">
+                        <h4 class="text-2xl font-semibold text-[#4c6559] mb-2 flex items-center">
+                            <svg class="w-6 h-6 mr-3 text-[#eea12e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Liste Complète du Personnel
+                        </h4>
+                        <p class="text-gray-600 mb-6">Consultez et modifiez les informations de tous les agents</p>
+                    </div>
+
+                    <!-- Barre de recherche -->
+                    <div class="mb-4">
+                        <input type="text" id="searchPersonnel" placeholder="🔍 Rechercher (matricule, nom, direction...)"
+                               class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559]">
+                    </div>
+
+                    <!-- Tableau du personnel -->
+                    <div class="overflow-x-auto rounded-xl border-2 border-gray-200 shadow-sm">
+                        <table class="w-full border-collapse text-sm">
+                            <thead class="bg-gradient-to-r from-gray-100 to-gray-50">
+                                <tr>
+                                    <th class="py-3 px-3 text-left font-semibold text-gray-700 border-b-2 border-gray-200">Matricule</th>
+                                    <th class="py-3 px-3 text-left font-semibold text-gray-700 border-b-2 border-gray-200">Nom & Prénoms</th>
+                                    <th class="py-3 px-3 text-left font-semibold text-gray-700 border-b-2 border-gray-200">Direction</th>
+                                    <th class="py-3 px-3 text-left font-semibold text-gray-700 border-b-2 border-gray-200">Sous-Dir.</th>
+                                    <th class="py-3 px-3 text-left font-semibold text-gray-700 border-b-2 border-gray-200">Service</th>
+                                    <th class="py-3 px-3 text-left font-semibold text-gray-700 border-b-2 border-gray-200">Poste</th>
+                                    <th class="py-3 px-3 text-center font-semibold text-gray-700 border-b-2 border-gray-200">Type</th>
+                                    <th class="py-3 px-3 text-center font-semibold text-gray-700 border-b-2 border-gray-200">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="personnelTableBody">
+                                {% for agent in agents %}
+                                <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors personnel-row"
+                                    data-search="{{ agent.matricule|lower }} {{ agent.nom|lower }} {{ agent.prenoms|lower }} {{ agent.direction.nom|lower }}">
+                                    <td class="py-3 px-3 font-medium text-gray-800">{{ agent.matricule }}</td>
+                                    <td class="py-3 px-3 text-gray-700">{{ agent.nom }} {{ agent.prenoms }}</td>
+                                    <td class="py-3 px-3 text-gray-600">{{ agent.direction.sigle|default:agent.direction.nom }}</td>
+                                    <td class="py-3 px-3 text-gray-600">{{ agent.sous_direction.nom|default:"-" }}</td>
+                                    <td class="py-3 px-3 text-gray-600">{{ agent.service.nom|default:"-" }}</td>
+                                    <td class="py-3 px-3 text-gray-600">{{ agent.poste|default:"-" }}</td>
+                                    <td class="py-3 px-3 text-center">
+                                        <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium {% if agent.type_personnel == 'responsable' %}bg-purple-100 text-purple-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                            {{ agent.get_type_personnel_display }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-3 text-center">
+                                        <button onclick="openEditAgentModal({{ agent.id }})" class="inline-flex items-center px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded-lg transition-colors">
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                            Modifier
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="py-8 text-center text-gray-500">
+                                        <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                                        </svg>
+                                        <p class="text-lg">Aucun agent trouvé</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Modal de modification d'agent -->
+                <div id="editAgentModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onclick="if(event.target===this) closeEditAgentModal()">
+                    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-scaleIn">
+                        <div class="sticky top-0 bg-white border-b-2 border-gray-200 p-6 flex justify-between items-center">
+                            <h3 class="text-2xl font-bold text-[#4c6559]">Modifier les Informations de l'Agent</h3>
+                            <button onclick="closeEditAgentModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <form method="post" id="editAgentForm" class="p-6">
+                            {% csrf_token %}
+                            <input type="hidden" name="modifier_agent" value="1">
+                            <input type="hidden" name="agent_id" id="editAgentId">
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Informations personnelles -->
+                                <div class="md:col-span-2">
+                                    <h4 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b-2 border-[#eea12e]">Informations Personnelles</h4>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Matricule *</label>
+                                    <input type="text" name="matricule" id="editMatricule" required class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559]">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Nom *</label>
+                                    <input type="text" name="nom" id="editNom" required class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559]">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Prénoms *</label>
+                                    <input type="text" name="prenoms" id="editPrenoms" required class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559]">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Catégorie *</label>
+                                    <input type="text" name="categorie" id="editCategorie" required class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559]">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Date d'embauche *</label>
+                                    <input type="date" name="date_embauche" id="editDateEmbauche" required class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559]">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Type de Personnel *</label>
+                                    <select name="type_personnel" id="editTypePersonnel" required class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559]">
+                                        <option value="agent">Agent</option>
+                                        <option value="responsable">Responsable</option>
+                                    </select>
+                                </div>
+
+                                <!-- Affectation -->
+                                <div class="md:col-span-2 mt-4">
+                                    <h4 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b-2 border-[#eea12e]">Affectation</h4>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Direction *</label>
+                                    <select name="direction" id="editDirection" required class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559]">
+                                        <option value="">-- Sélectionner --</option>
+                                        {% for dir in directions %}
+                                        <option value="{{ dir.id }}">{{ dir.nom }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Poste</label>
+                                    <input type="text" name="poste" id="editPoste" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559]">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Tenu depuis</label>
+                                    <input type="date" name="tenu_depuis" id="editTenuDepuis" class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4c6559] focus:border-[#4c6559]">
+                                </div>
+                            </div>
+
+                            <div class="flex space-x-3 mt-8 pt-6 border-t-2 border-gray-200">
+                                <button type="button" onclick="closeEditAgentModal()" class="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-semibold transition-colors">
+                                    Annuler
+                                </button>
+                                <button type="submit" class="flex-1 px-6 py-3 bg-gradient-to-r from-[#4c6559] to-[#3a4f44] hover:from-[#3a4f44] hover:to-[#4c6559] text-white rounded-xl font-semibold transition-all">
+                                    Enregistrer les modifications
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- ONGLET 6: Importer Personnel -->
                 <div class="tab-pane hidden" id="importerPersonnel">
                     <div class="mb-6">
                         <h4 class="text-2xl font-semibold text-[#4c6559] mb-2 flex items-center">
@@ -431,8 +867,72 @@
                             </svg>
                             Importer la liste du Personnel
                         </h4>
-                        <p class="text-gray-600">Importez plusieurs agents via un fichier CSV</p>
+                        <p class="text-gray-600 mb-6">Importez plusieurs agents en une seule opération via un fichier CSV</p>
                     </div>
+
+                    <!-- Instructions et format -->
+                    <div class="bg-blue-50 border-l-4 border-blue-400 rounded-lg p-6 mb-6">
+                        <div class="flex items-start">
+                            <svg class="w-6 h-6 text-blue-400 mr-3 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                            <div class="flex-1">
+                                <h5 class="text-blue-800 font-semibold mb-2">📋 Format du fichier CSV requis</h5>
+                                <p class="text-blue-700 text-sm mb-3">
+                                    Votre fichier CSV doit contenir les colonnes suivantes (séparées par des points-virgules <code class="bg-blue-100 px-1 rounded">;</code>):
+                                </p>
+                                <div class="bg-white rounded-lg p-4 text-sm font-mono overflow-x-auto mb-3">
+                                    <div class="text-gray-700">
+                                        matricule;nom;prenoms;email;categorie;date_embauche;direction_nom;sous_direction_nom;service_nom;poste;tenu_depuis;type_personnel
+                                    </div>
+                                </div>
+                                <ul class="text-blue-700 text-sm space-y-2">
+                                    <li class="flex items-start">
+                                        <span class="font-semibold mr-2">•</span>
+                                        <span><strong>Champs obligatoires:</strong> matricule, nom, prenoms, categorie, date_embauche, direction_nom</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <span class="font-semibold mr-2">•</span>
+                                        <span><strong>Format des dates:</strong> JJ/MM/AAAA (exemple: 15/03/2024)</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <span class="font-semibold mr-2">•</span>
+                                        <span><strong>direction_nom:</strong> Nom exact de la direction (ex: Direction des Statistiques)</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <span class="font-semibold mr-2">•</span>
+                                        <span><strong>type_personnel:</strong> "agent" ou "responsable" (par défaut: agent)</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <span class="font-semibold mr-2">•</span>
+                                        <span><strong>Encodage:</strong> UTF-8 avec BOM</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <span class="font-semibold mr-2">•</span>
+                                        <span><strong>Compte utilisateur:</strong> Créé automatiquement avec le mot de passe par défaut <code class="bg-blue-100 px-1 rounded">0000</code></span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Boutons télécharger -->
+                    <div class="mb-6 flex gap-4">
+                        <a href="{% url 'telecharger_template_csv' %}" class="inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow-md transition-colors">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Télécharger le template (vide)
+                        </a>
+                        <a href="{% url 'exporter_agents_csv' %}" class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md transition-colors">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                            Exporter les agents actuels
+                        </a>
+                    </div>
+
+                    <!-- Formulaire d'upload -->
                     <form method="post" enctype="multipart/form-data" class="space-y-6">
                         {% csrf_token %}
                         <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-[#4c6559] transition-smooth">
@@ -440,17 +940,17 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                             </svg>
                             <label for="fichier_csv" class="block text-sm font-semibold text-gray-700 mb-3">
-                                Fichier CSV
+                                Sélectionner votre fichier CSV
                             </label>
                             <input type="file" name="fichier_csv" id="fichier_csv" accept=".csv"
                                 class="block w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#4c6559] file:text-white hover:file:bg-[#3a4f44] file:transition-smooth cursor-pointer">
-                            <p class="mt-3 text-xs text-gray-500">Format CSV uniquement - Taille max: 10MB</p>
+                            <p class="mt-3 text-xs text-gray-500">Format CSV uniquement - Encodage UTF-8 - Taille max: 10MB</p>
                         </div>
                         <button type="submit" name="importer_personnel" class="btn-hover w-full flex items-center justify-center px-6 py-4 bg-gradient-to-r from-[#4c6559] to-[#3a4f44] text-white rounded-xl shadow-lg text-lg font-semibold hover:from-[#3a4f44] hover:to-[#4c6559] transition-smooth">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
                             </svg>
-                            Importer le Personnel
+                            Lancer l'importation
                         </button>
                     </form>
                 </div>
@@ -561,6 +1061,199 @@ document.addEventListener("DOMContentLoaded", function () {
             `;
         });
     }
+
+    // 📋 MODAL CHANGER DIRECTION
+    window.openChangeDirectionModal = function(agentId, agentName, currentDirection) {
+        document.getElementById('modalAgentId').value = agentId;
+        document.getElementById('modalAgentName').textContent = agentName;
+        document.getElementById('modalCurrentDirection').textContent = currentDirection;
+        document.getElementById('changeDirectionModal').classList.remove('hidden');
+    };
+
+    window.closeChangeDirectionModal = function() {
+        document.getElementById('changeDirectionModal').classList.add('hidden');
+        document.getElementById('modalNewDirection').value = '';
+    };
+
+    // 🔍 RECHERCHE D'AGENTS
+    const searchInput = document.getElementById('searchAgent');
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('.agent-row');
+
+            rows.forEach(row => {
+                const searchData = row.getAttribute('data-search');
+                if (searchData.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    // 🔍 RECHERCHE DU PERSONNEL
+    const searchPersonnel = document.getElementById('searchPersonnel');
+    if (searchPersonnel) {
+        searchPersonnel.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('.personnel-row');
+
+            rows.forEach(row => {
+                const searchData = row.getAttribute('data-search');
+                if (searchData.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    // 📋 MODAL MODIFIER AGENT - Données des agents
+    const agentsData = {
+        {% for agent in agents %}
+        {{ agent.id }}: {
+            matricule: "{{ agent.matricule }}",
+            nom: "{{ agent.nom }}",
+            prenoms: "{{ agent.prenoms }}",
+            categorie: "{{ agent.categorie }}",
+            date_embauche: "{{ agent.date_embauche|date:'Y-m-d' }}",
+            type_personnel: "{{ agent.type_personnel }}",
+            direction: {{ agent.direction.id }},
+            poste: "{{ agent.poste|default:'' }}",
+            tenu_depuis: "{{ agent.tenu_depuis|date:'Y-m-d'|default:'' }}"
+        },
+        {% endfor %}
+    };
+
+    window.openEditAgentModal = function(agentId) {
+        const agent = agentsData[agentId];
+        if (!agent) return;
+
+        // Remplir les champs du formulaire
+        document.getElementById('editAgentId').value = agentId;
+        document.getElementById('editMatricule').value = agent.matricule;
+        document.getElementById('editNom').value = agent.nom;
+        document.getElementById('editPrenoms').value = agent.prenoms;
+        document.getElementById('editCategorie').value = agent.categorie;
+        document.getElementById('editDateEmbauche').value = agent.date_embauche;
+        document.getElementById('editTypePersonnel').value = agent.type_personnel;
+        document.getElementById('editDirection').value = agent.direction;
+        document.getElementById('editPoste').value = agent.poste;
+        document.getElementById('editTenuDepuis').value = agent.tenu_depuis;
+
+        // Afficher le modal
+        document.getElementById('editAgentModal').classList.remove('hidden');
+    };
+
+    window.closeEditAgentModal = function() {
+        document.getElementById('editAgentModal').classList.add('hidden');
+        document.getElementById('editAgentForm').reset();
+    };
+
+    // Fermer le modal avec la touche Echap
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const editModal = document.getElementById('editAgentModal');
+            const changeModal = document.getElementById('changeDirectionModal');
+            if (!editModal.classList.contains('hidden')) {
+                closeEditAgentModal();
+            }
+            if (!changeModal.classList.contains('hidden')) {
+                closeChangeDirectionModal();
+            }
+        }
+    });
+
+    // ========================================
+    // 🔗 SÉLECTEURS EN CASCADE (Direction -> Sous-Direction -> Service)
+    // ========================================
+
+    // Données des sous-directions et services par direction
+    const organisationData = {
+        {% for direction in directions %}
+        {{ direction.id }}: {
+            nom: "{{ direction.nom }}",
+            sous_directions: {
+                {% for sd in direction.sous_directions.all %}
+                {{ sd.id }}: {
+                    nom: "{{ sd.nom }}",
+                    services: {
+                        {% for service in sd.services.all %}
+                        {{ service.id }}: "{{ service.nom }}",
+                        {% endfor %}
+                    }
+                },
+                {% endfor %}
+            }
+        },
+        {% endfor %}
+    };
+
+    window.updateSousDirections = function() {
+        const directionId = document.getElementById('id_direction').value;
+        const sousDirectionSelect = document.getElementById('id_sous_direction');
+        const serviceSelect = document.getElementById('id_service');
+
+        // Réinitialiser les sélecteurs
+        sousDirectionSelect.innerHTML = '<option value="">-- Sélectionner une sous-direction --</option>';
+        serviceSelect.innerHTML = '<option value="">-- Sélectionner d\'abord une sous-direction --</option>';
+        serviceSelect.disabled = true;
+
+        if (directionId && organisationData[directionId]) {
+            const sousDirections = organisationData[directionId].sous_directions;
+
+            if (Object.keys(sousDirections).length > 0) {
+                sousDirectionSelect.disabled = false;
+
+                for (const [sdId, sdData] of Object.entries(sousDirections)) {
+                    const option = document.createElement('option');
+                    option.value = sdId;
+                    option.textContent = sdData.nom;
+                    sousDirectionSelect.appendChild(option);
+                }
+            } else {
+                sousDirectionSelect.disabled = true;
+                sousDirectionSelect.innerHTML = '<option value="">-- Aucune sous-direction disponible --</option>';
+            }
+        } else {
+            sousDirectionSelect.disabled = true;
+        }
+    };
+
+    window.updateServices = function() {
+        const directionId = document.getElementById('id_direction').value;
+        const sousDirectionId = document.getElementById('id_sous_direction').value;
+        const serviceSelect = document.getElementById('id_service');
+
+        serviceSelect.innerHTML = '<option value="">-- Sélectionner un service --</option>';
+
+        if (directionId && sousDirectionId && organisationData[directionId]) {
+            const sousDirection = organisationData[directionId].sous_directions[sousDirectionId];
+
+            if (sousDirection && sousDirection.services) {
+                const services = sousDirection.services;
+
+                if (Object.keys(services).length > 0) {
+                    serviceSelect.disabled = false;
+
+                    for (const [serviceId, serviceName] of Object.entries(services)) {
+                        const option = document.createElement('option');
+                        option.value = serviceId;
+                        option.textContent = serviceName;
+                        serviceSelect.appendChild(option);
+                    }
+                } else {
+                    serviceSelect.disabled = true;
+                    serviceSelect.innerHTML = '<option value="">-- Aucun service disponible --</option>';
+                }
+            }
+        } else {
+            serviceSelect.disabled = true;
+        }
+    };
 });
 </script>
 {% endblock %}

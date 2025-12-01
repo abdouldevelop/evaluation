@@ -153,7 +153,7 @@ AUTH_USER_MODEL = 'fiches.Utilisateur'
 LOGIN_URL = '/login/'
 #LOGIN_REDIRECT_URL = '/dashboard-agent/'
 
-DEFAULT_PASSWORD    = "00000000"
+DEFAULT_PASSWORD    = "0000"
 
 "evaluationanstat@gmail.com"
 

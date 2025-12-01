@@ -5,6 +5,27 @@
 <div class="container mt-5 max-w-lg mx-auto p-4 sm:p-6 bg-white shadow-lg rounded-lg">
     <h2 class="text-center text-2xl font-bold mb-6 text-gray-800">🔐 Modifier votre mot de passe</h2>
 
+    <!-- Alerte première connexion -->
+    {% if first_change %}
+    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-lg">
+        <div class="flex items-start">
+            <svg class="w-6 h-6 text-yellow-400 mr-3 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+            </svg>
+            <div class="flex-1">
+                <h3 class="text-yellow-800 font-semibold mb-1">🔒 Première connexion</h3>
+                <p class="text-yellow-700 text-sm">
+                    Vous utilisez actuellement le mot de passe par défaut (<strong>0000</strong>).
+                    Pour des raisons de sécurité, vous devez le modifier avant d'accéder au système.
+                </p>
+                <p class="text-yellow-700 text-sm mt-2">
+                    <strong>Note :</strong> Dans le champ "Ancien mot de passe", entrez <code class="bg-yellow-100 px-2 py-1 rounded">0000</code>
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     {% if messages %}
         {% for message in messages %}
             <div class="alert alert-{{ message.tags }} flex items-center p-4 mb-4 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}" role="alert">
@@ -57,11 +78,18 @@
             <p id="passwordMismatch" class="text-red-600 text-sm mt-1 hidden">Les mots de passe ne correspondent pas.</p>
         </div>
         <div class="flex space-x-4">
-
-            <button type="button" onclick="history.back()" class="w-1/2 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:ring-offset-2 transition duration-200">
-                    Retour
+            {% if not first_change %}
+            <button type="button" onclick="history.back()" class="w-1/2 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-200">
+                Retour
             </button>
-            <button type="submit" class="w-full px-4 py-2 bg-green-900 text-white rounded-lg shadow-md hover:bg-orange-600 text-sm transition-colors duration-150">Modifier le mot de passe</button>
+            {% endif %}
+            <button type="submit" class="{% if first_change %}w-full{% else %}w-full{% endif %} px-4 py-2 bg-green-900 text-white rounded-lg shadow-md hover:bg-orange-600 text-sm transition-colors duration-150">
+                {% if first_change %}
+                    🔐 Créer mon nouveau mot de passe
+                {% else %}
+                    Modifier le mot de passe
+                {% endif %}
+            </button>
         </div>
     </form>
 </div>

@@ -5,7 +5,7 @@ from .views import tableau_de_bord, dashboard_directeur, ajouter_evaluation, fic
     modifier_evaluation, liste_evaluations, dashboard_agent, CustomLoginView, gestion_rh, dashboard_rh, \
     details_evaluation, modifier_mot_de_passe, redirection_apres_login, ajouter_agent, evaluer_responsable, \
     evaluer_agent, generer_fiche_evaluation_pdf, signer_evaluation, ajouter_avis_agent, \
-    donner_decision_finale, dashboard_dg, voir_mes_notes_evaluation
+    donner_decision_finale, dashboard_dg, voir_mes_notes_evaluation, telecharger_template_csv
 from django.urls import path
 from django.contrib.auth.views import LogoutView
 from .views import CustomLoginView
@@ -26,6 +26,7 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(), name='logout'),  # ✅ Définition correcte de la déconnexion
     path('ajouter-evaluation/<int:agent_id>/', ajouter_evaluation, name='ajouter_evaluation'),
     path('gestionrh/', gestion_rh, name='gestion_rh'),
+    path('gestionrh/telecharger-template-csv/', telecharger_template_csv, name='telecharger_template_csv'),
     path('dashboard-rh/', dashboard_rh, name='dashboard_rh'),
     #path('evaluation/<int:evaluation_id>/', details_evaluation, name='details_evaluation'),
     path("modifier-mot-de-passe/", modifier_mot_de_passe, name="modifier_mot_de_passe"),

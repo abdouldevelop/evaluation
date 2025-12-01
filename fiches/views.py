@@ -640,93 +640,283 @@ def gestion_rh(request):
                 return redirect('gestion_rh')
 
         elif "ajouter_agent" in request.POST:
-            agent_form = AgentForm(request.POST)
-            if agent_form.is_valid():
-                agent_form.save()
-                return redirect('gestion_rh')
+            try:
+                # Récupérer les données du formulaire
+                matricule = request.POST.get('matricule')
+                nom = request.POST.get('nom')
+                prenoms = request.POST.get('prenoms')
+                categorie = request.POST.get('categorie')
+                date_embauche = request.POST.get('date_embauche')
+                type_personnel = request.POST.get('type_personnel')
+                email = request.POST.get('email', '').strip()
+                direction_id = request.POST.get('direction')
+                sous_direction_id = request.POST.get('sous_direction')
+                service_id = request.POST.get('service')
+                poste = request.POST.get('poste', '')
+                tenu_depuis = request.POST.get('tenu_depuis')
+                creer_compte = request.POST.get('creer_compte') == 'on'
+
+                # Vérifier si le matricule existe déjà
+                if Agent.objects.filter(matricule=matricule).exists():
+                    messages.error(request, f"❌ Un agent avec le matricule {matricule} existe déjà.")
+                    return redirect('gestion_rh')
+
+                # Créer l'agent
+                agent = Agent()
+                agent.matricule = matricule
+                agent.nom = nom
+                agent.prenoms = prenoms
+                agent.categorie = categorie
+                agent.date_embauche = date_embauche
+                agent.type_personnel = type_personnel
+                agent.poste = poste if poste else None
+                agent.tenu_depuis = tenu_depuis if tenu_depuis else None
+
+                # Affecter la direction
+                if direction_id:
+                    agent.direction = Direction.objects.get(id=direction_id)
+
+                # Affecter la sous-direction si fournie
+                if sous_direction_id:
+                    from .models import SousDirection
+                    agent.sous_direction = SousDirection.objects.get(id=sous_direction_id)
+
+                # Affecter le service si fourni
+                if service_id:
+                    from .models import Service
+                    agent.service = Service.objects.get(id=service_id)
+
+                # Créer un compte utilisateur si demandé
+                if creer_compte:
+                    if Utilisateur.objects.filter(username=matricule).exists():
+                        messages.warning(request, f"⚠️ Un utilisateur avec le nom d'utilisateur {matricule} existe déjà. Le compte n'a pas été créé.")
+                    else:
+                        # Utiliser l'email fourni ou générer un email par défaut
+                        user_email = email if email else f"{matricule}@anstat.mg"
+
+                        user = Utilisateur.objects.create_user(
+                            username=matricule,
+                            email=user_email,
+                            password="0000"
+                        )
+                        user.role = 'agent'
+                        user.matricule = matricule
+                        user.save()
+                        agent.utilisateur = user
+                        messages.success(request, f"✅ Compte utilisateur créé avec le nom d'utilisateur: {matricule} | Mot de passe: 0000")
+
+                agent.save()
+                messages.success(request, f"✅ L'agent {nom} {prenoms} (matricule: {matricule}) a été ajouté avec succès.")
+
+            except Direction.DoesNotExist:
+                messages.error(request, "❌ Direction invalide.")
+            except Exception as e:
+                messages.error(request, f"❌ Erreur lors de l'ajout de l'agent : {str(e)}")
+
+            return redirect('gestion_rh')
 
         elif "changer_direction" in request.POST:
             agent_id = request.POST.get("agent_id")
-            agent = Agent.objects.get(id=agent_id)
-            changer_direction_form = ChangerDirectionAgentForm(request.POST, instance=agent)
-            if changer_direction_form.is_valid():
-                changer_direction_form.save()
-                return redirect('gestion_rh')
+            try:
+                agent = Agent.objects.get(id=agent_id)
+                ancienne_direction = agent.direction
+                changer_direction_form = ChangerDirectionAgentForm(request.POST, instance=agent)
+                if changer_direction_form.is_valid():
+                    nouvelle_direction = changer_direction_form.cleaned_data['direction']
+
+                    # Vérifier qu'on ne transfère pas vers la même direction
+                    if ancienne_direction.id == nouvelle_direction.id:
+                        messages.warning(request, f"⚠️ {agent.nom} {agent.prenoms} est déjà dans {ancienne_direction.nom}.")
+                    else:
+                        changer_direction_form.save()
+                        messages.success(request, f"✅ {agent.nom} {agent.prenoms} a été transféré de {ancienne_direction.nom} vers {nouvelle_direction.nom}.")
+                else:
+                    messages.error(request, "❌ Formulaire invalide. Veuillez vérifier les données.")
+            except Agent.DoesNotExist:
+                messages.error(request, "❌ Agent introuvable.")
+            return redirect('gestion_rh')
+
+        elif "modifier_agent" in request.POST:
+            agent_id = request.POST.get("agent_id")
+            try:
+                agent = Agent.objects.get(id=agent_id)
+
+                # Mettre à jour tous les champs
+                agent.matricule = request.POST.get('matricule')
+                agent.nom = request.POST.get('nom')
+                agent.prenoms = request.POST.get('prenoms')
+                agent.categorie = request.POST.get('categorie')
+                agent.date_embauche = request.POST.get('date_embauche')
+                agent.type_personnel = request.POST.get('type_personnel')
+                agent.poste = request.POST.get('poste', '')
+
+                tenu_depuis = request.POST.get('tenu_depuis')
+                agent.tenu_depuis = tenu_depuis if tenu_depuis else None
+
+                direction_id = request.POST.get('direction')
+                if direction_id:
+                    agent.direction = Direction.objects.get(id=direction_id)
+
+                agent.save()
+                messages.success(request, f"✅ Les informations de {agent.nom} {agent.prenoms} ont été mises à jour avec succès.")
+            except Agent.DoesNotExist:
+                messages.error(request, "❌ Agent introuvable.")
+            except Direction.DoesNotExist:
+                messages.error(request, "❌ Direction invalide.")
+            except Exception as e:
+                messages.error(request, f"❌ Erreur lors de la modification : {str(e)}")
+            return redirect('gestion_rh')
 
         elif "importer_personnel" in request.POST:
             fichier = request.FILES.get("fichier_csv")
-            if fichier:
-                try:
-                    lecteur = csv.DictReader(TextIOWrapper(fichier.file, encoding='utf-8-sig'), delimiter=';')
-                    compteur = 0
-                    erreurs = []
+            if not fichier:
+                messages.error(request, "❌ Aucun fichier sélectionné.")
+                return redirect('gestion_rh')
 
-                    for i, ligne in enumerate(lecteur, start=1):
+            try:
+                lecteur = csv.DictReader(TextIOWrapper(fichier.file, encoding='utf-8-sig'), delimiter=';')
+                compteur = 0
+                erreurs = []
+                lignes_totales = 0
+
+                from .models import SousDirection, Service
+
+                for i, ligne in enumerate(lecteur, start=2):  # Start at 2 (1 is header)
+                    lignes_totales += 1
+                    try:
+                        # Récupération des champs
+                        matricule = ligne.get('matricule', '').strip()
+                        nom = ligne.get('nom', '').strip()
+                        prenoms = ligne.get('prenoms', '').strip()
+                        email = ligne.get('email', '').strip()
+                        categorie = ligne.get('categorie', '').strip()
+                        direction_nom = ligne.get('direction_nom', '').strip()
+                        sous_direction_nom = ligne.get('sous_direction_nom', '').strip()
+                        service_nom = ligne.get('service_nom', '').strip()
+                        poste = ligne.get('poste', '').strip()
+                        type_personnel = ligne.get('type_personnel', 'agent').strip().lower()
+
+                        # Validation des champs obligatoires
+                        if not matricule:
+                            erreurs.append(f"Ligne {i} : matricule manquant")
+                            continue
+                        if not nom:
+                            erreurs.append(f"Ligne {i} : nom manquant")
+                            continue
+                        if not prenoms:
+                            erreurs.append(f"Ligne {i} : prénoms manquant")
+                            continue
+                        if not categorie:
+                            erreurs.append(f"Ligne {i} : catégorie manquante")
+                            continue
+                        if not direction_nom:
+                            erreurs.append(f"Ligne {i} : direction_nom manquant")
+                            continue
+
+                        # Validation type_personnel
+                        if type_personnel not in ['agent', 'responsable']:
+                            type_personnel = 'agent'
+
+                        # Parsing des dates
                         try:
-                            matricule = ligne.get('matricule', '').strip()
-                            nom = ligne.get('nom', '').strip()
-                            prenoms = ligne.get('prenoms', '').strip()
-                            categorie = ligne.get('categorie', '').strip()
-                            direction_id = ligne.get('direction_id', '').strip()
-                            sous_direction = ligne.get('sous_direction', '').strip()
-                            service = ligne.get('service', '').strip()
-                            poste = ligne.get('poste', '').strip()
-                            type_personnel = ligne.get('type_personnel', 'agent').strip()
-
-                            # ✅ Sécurité sur les dates
-                            try:
-                                date_embauche = datetime.strptime(ligne.get('date_embauche', ''), "%d/%m/%Y").date()
-                            except:
-                                date_embauche = None
-
-                            try:
-                                tenu_depuis = datetime.strptime(ligne.get('tenu_depuis', ''), "%d/%m/%Y").date()
-                            except:
-                                tenu_depuis = None
-
-                            # ✅ Convertir direction_id float/str → int
-                            direction_id = int(float(direction_id)) if direction_id else None
-                            direction = Direction.objects.get(id=direction_id)
-
-                            # ✅ Vérifier doublon utilisateur
-                            if Utilisateur.objects.filter(username=matricule).exists():
-                                erreurs.append(f"Ligne {i} : utilisateur déjà existant ({matricule})")
+                            date_embauche_str = ligne.get('date_embauche', '').strip()
+                            if date_embauche_str:
+                                date_embauche = datetime.strptime(date_embauche_str, "%d/%m/%Y").date()
+                            else:
+                                erreurs.append(f"Ligne {i} : date_embauche manquante")
                                 continue
+                        except ValueError:
+                            erreurs.append(f"Ligne {i} : format de date_embauche invalide (attendu: JJ/MM/AAAA)")
+                            continue
 
-                            utilisateur = Utilisateur.objects.create_user(
-                                username=matricule,
-                                password="00000000",
-                                role="agent",
-                                matricule=matricule
-                            )
+                        try:
+                            tenu_depuis_str = ligne.get('tenu_depuis', '').strip()
+                            tenu_depuis = datetime.strptime(tenu_depuis_str, "%d/%m/%Y").date() if tenu_depuis_str else None
+                        except ValueError:
+                            tenu_depuis = None
 
-                            Agent.objects.create(
-                                utilisateur=utilisateur,
-                                nom=nom,
-                                prenoms=prenoms,
-                                matricule=matricule,
-                                date_embauche=date_embauche,
-                                categorie=categorie,
-                                direction=direction,
-                                sous_direction=sous_direction,
-                                service=service,
-                                poste=poste,
-                                tenu_depuis=tenu_depuis,
-                                type_personnel=type_personnel
-                            )
-                            compteur += 1
-
+                        # Recherche de la direction par nom
+                        try:
+                            direction = Direction.objects.get(nom__iexact=direction_nom)
                         except Direction.DoesNotExist:
-                            erreurs.append(f"Ligne {i} : direction_id invalide ({direction_id})")
-                        except Exception as e:
-                            erreurs.append(f"Ligne {i} : erreur {str(e)}")
+                            erreurs.append(f"Ligne {i} : direction '{direction_nom}' introuvable")
+                            continue
 
-                    messages.success(request, f"✅ {compteur} agents importés avec succès.")
-                    if erreurs:
-                        messages.warning(request, "⚠️ Certaines lignes ont échoué :\n" + "\n".join(erreurs[:5]))
+                        # Recherche de la sous-direction (optionnel)
+                        sous_direction = None
+                        if sous_direction_nom:
+                            try:
+                                sous_direction = SousDirection.objects.get(nom__iexact=sous_direction_nom, direction=direction)
+                            except SousDirection.DoesNotExist:
+                                erreurs.append(f"Ligne {i} : sous-direction '{sous_direction_nom}' introuvable dans {direction_nom}")
 
-                except Exception as e:
-                    messages.error(request, f"❌ Erreur pendant l'import : {e}")
+                        # Recherche du service (optionnel)
+                        service = None
+                        if service_nom and sous_direction:
+                            try:
+                                service = Service.objects.get(nom__iexact=service_nom, sous_direction=sous_direction)
+                            except Service.DoesNotExist:
+                                erreurs.append(f"Ligne {i} : service '{service_nom}' introuvable dans {sous_direction_nom}")
+
+                        # Vérifier si l'agent existe déjà
+                        if Agent.objects.filter(matricule=matricule).exists():
+                            erreurs.append(f"Ligne {i} : agent avec matricule {matricule} existe déjà")
+                            continue
+
+                        # Vérifier si l'utilisateur existe déjà
+                        if Utilisateur.objects.filter(username=matricule).exists():
+                            erreurs.append(f"Ligne {i} : utilisateur avec username {matricule} existe déjà")
+                            continue
+
+                        # Déterminer l'email
+                        user_email = email if email else f"{matricule}@anstat.mg"
+
+                        # Créer l'utilisateur
+                        utilisateur = Utilisateur.objects.create_user(
+                            username=matricule,
+                            email=user_email,
+                            password="0000"
+                        )
+                        utilisateur.role = 'agent'
+                        utilisateur.matricule = matricule
+                        utilisateur.save()
+
+                        # Créer l'agent
+                        Agent.objects.create(
+                            utilisateur=utilisateur,
+                            nom=nom,
+                            prenoms=prenoms,
+                            matricule=matricule,
+                            date_embauche=date_embauche,
+                            categorie=categorie,
+                            direction=direction,
+                            sous_direction=sous_direction,
+                            service=service,
+                            poste=poste if poste else None,
+                            tenu_depuis=tenu_depuis,
+                            type_personnel=type_personnel
+                        )
+                        compteur += 1
+
+                    except Exception as e:
+                        erreurs.append(f"Ligne {i} : {str(e)}")
+
+                # Messages de résultat
+                if compteur > 0:
+                    messages.success(request, f"✅ {compteur} agent(s) importé(s) avec succès sur {lignes_totales} ligne(s).")
+
+                if erreurs:
+                    nb_erreurs = len(erreurs)
+                    if nb_erreurs <= 10:
+                        messages.warning(request, "⚠️ Erreurs détectées :\n" + "\n".join(erreurs))
+                    else:
+                        messages.warning(request, f"⚠️ {nb_erreurs} erreur(s) détectée(s). Premières erreurs :\n" + "\n".join(erreurs[:10]))
+
+                if compteur == 0 and not erreurs:
+                    messages.info(request, "ℹ️ Aucune ligne valide trouvée dans le fichier.")
+
+            except Exception as e:
+                messages.error(request, f"❌ Erreur lors de la lecture du fichier : {str(e)}")
 
             return redirect('gestion_rh')
 
@@ -745,6 +935,143 @@ def gestion_rh(request):
         'agent_form': agent_form,
         'changer_direction_form': changer_direction_form
     })
+
+
+@login_required
+def telecharger_template_csv(request):
+    """
+    Génère et télécharge un fichier template CSV vide pour l'importation du personnel
+    """
+    from django.http import HttpResponse
+
+    if not request.user.is_rh():
+        return render(request, 'fiches/erreur.html', {'message': "Accès refusé. Vous n'êtes pas RH."})
+
+    # Créer la réponse HTTP avec le type de contenu CSV
+    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+    response['Content-Disposition'] = 'attachment; filename="template_import_personnel.csv"'
+
+    # Ajouter le BOM UTF-8 pour Excel
+    response.write('\ufeff')
+
+    # Créer le writer CSV avec délimiteur point-virgule
+    import csv
+    writer = csv.writer(response, delimiter=';')
+
+    # Écrire l'en-tête
+    writer.writerow([
+        'matricule',
+        'nom',
+        'prenoms',
+        'email',
+        'categorie',
+        'date_embauche',
+        'direction_nom',
+        'sous_direction_nom',
+        'service_nom',
+        'poste',
+        'tenu_depuis',
+        'type_personnel'
+    ])
+
+    # Ajouter des lignes vides commentées avec instructions
+    writer.writerow([])
+    writer.writerow(['# INSTRUCTIONS D\'UTILISATION'])
+    writer.writerow(['# ============================='])
+    writer.writerow(['#'])
+    writer.writerow(['# 1. Supprimez toutes ces lignes de commentaires (lignes commençant par #)'])
+    writer.writerow(['# 2. Remplissez vos données en respectant le format ci-dessous'])
+    writer.writerow(['#'])
+    writer.writerow(['# CHAMPS OBLIGATOIRES :'])
+    writer.writerow(['#   - matricule : Matricule unique de l\'agent (ex: 2011T23)'])
+    writer.writerow(['#   - nom : Nom de famille en MAJUSCULES'])
+    writer.writerow(['#   - prenoms : Prénoms de l\'agent'])
+    writer.writerow(['#   - categorie : Catégorie (ex: CS, CS2, CS4, CM2)'])
+    writer.writerow(['#   - date_embauche : Format JJ/MM/AAAA (ex: 13/11/2023)'])
+    writer.writerow(['#   - direction_nom : Nom exact de la direction (ex: Direction des Statistiques)'])
+    writer.writerow(['#'])
+    writer.writerow(['# CHAMPS OPTIONNELS :'])
+    writer.writerow(['#   - email : Adresse email (sinon généré automatiquement: matricule@anstat.mg)'])
+    writer.writerow(['#   - sous_direction_nom : Nom de la sous-direction'])
+    writer.writerow(['#   - service_nom : Nom du service'])
+    writer.writerow(['#   - poste : Intitulé du poste (ex: Chargé d\'études, Directeur)'])
+    writer.writerow(['#   - tenu_depuis : Date de prise de fonction, format JJ/MM/AAAA'])
+    writer.writerow(['#   - type_personnel : "agent" ou "responsable" (par défaut: agent)'])
+    writer.writerow(['#'])
+    writer.writerow(['# EXEMPLE DE LIGNE :'])
+    writer.writerow(['# 2011T23;TOURE;MOUSTAPHA;moustapha.toure@anstat.mg;CM2;13/11/2023;Direction Informatique;Sous-direction 1;Service 1;Chargé d\'études;13/11/2023;agent'])
+    writer.writerow(['#'])
+    writer.writerow(['# NOTE : Tous les agents importés auront le mot de passe par défaut "0000"'])
+    writer.writerow(['#        Ils devront le changer à leur première connexion'])
+
+    return response
+
+
+@login_required
+def exporter_agents_csv(request):
+    """
+    Exporte tous les agents existants au format CSV
+    """
+    from django.http import HttpResponse
+
+    if not request.user.is_rh():
+        return render(request, 'fiches/erreur.html', {'message': "Accès refusé. Vous n'êtes pas RH."})
+
+    # Créer la réponse HTTP avec le type de contenu CSV
+    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+    response['Content-Disposition'] = 'attachment; filename="export_agents.csv"'
+
+    # Ajouter le BOM UTF-8 pour Excel
+    response.write('\ufeff')
+
+    # Créer le writer CSV avec délimiteur point-virgule
+    import csv
+    writer = csv.writer(response, delimiter=';')
+
+    # Écrire l'en-tête
+    writer.writerow([
+        'matricule',
+        'nom',
+        'prenoms',
+        'email',
+        'categorie',
+        'date_embauche',
+        'direction_nom',
+        'sous_direction_nom',
+        'service_nom',
+        'poste',
+        'tenu_depuis',
+        'type_personnel'
+    ])
+
+    # Récupérer tous les agents
+    agents = Agent.objects.select_related('direction', 'sous_direction', 'service', 'utilisateur').all().order_by('matricule')
+
+    # Écrire les données de chaque agent
+    for agent in agents:
+        # Formater les dates au format JJ/MM/AAAA
+        date_embauche = agent.date_embauche.strftime('%d/%m/%Y') if agent.date_embauche else ''
+        tenu_depuis = agent.tenu_depuis.strftime('%d/%m/%Y') if agent.tenu_depuis else ''
+
+        # Récupérer l'email depuis l'utilisateur
+        email = agent.utilisateur.email if agent.utilisateur else ''
+
+        writer.writerow([
+            agent.matricule,
+            agent.nom,
+            agent.prenoms,
+            email,
+            agent.categorie,
+            date_embauche,
+            agent.direction.nom if agent.direction else '',
+            agent.sous_direction.nom if agent.sous_direction else '',
+            agent.service.nom if agent.service else '',
+            agent.poste or '',
+            tenu_depuis,
+            agent.type_personnel
+        ])
+
+    return response
 
 '''
 # fiches/views.py
@@ -1073,15 +1400,19 @@ def modifier_mot_de_passe(request):
                 role = getattr(user, 'role', None)
                 if role == 'agent':
                     return redirect('dashboard_agent')
-                if role == 'directeur':
+                elif role == 'chef_service':
+                    return redirect('dashboard_chef_service')
+                elif role == 'sous_directeur':
+                    return redirect('dashboard_sousdirecteur')
+                elif role == 'directeur':
                     return redirect('dashboard_directeur')
-                if role == 'rh':
-                    return redirect('dashboard_rh')
-                if role == 'dg':
+                elif role == 'directeur_general':
                     return redirect('dashboard_dg')
-
-                # fallback
-                return redirect('login')
+                elif role == 'rh':
+                    return redirect('dashboard_rh')
+                else:
+                    # fallback
+                    return redirect('login')
 
     # GET ou erreur de POST → affichage du formulaire
     return render(request, 'fiches/modifier_mdp1.html', {
